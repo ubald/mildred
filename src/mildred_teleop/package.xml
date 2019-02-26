@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mildred_teleop</name>
+  <version>0.0.0</version>
+  <description>The Mildred hexapod remote control nodes.</description>
+  <maintainer email="ubald@ubaldesign.com">François Ubald Brien</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>joy</depend>
+  <depend>ps3joy</depend>
+  <depend>mildred_</depend>
+
+  <export>
+
+  </export>
+</package>

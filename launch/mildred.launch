@@ -1,0 +1,5 @@
+<launch>
+    <group ns="mildred">
+        <node pkg="mildred" name="sim" type="mildred_node"/>
+    </group>
+</launch>

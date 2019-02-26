@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mildred_description</name>
+  <version>0.0.0</version>
+  <description>The Mildred hexapod robot description files.</description>
+  <maintainer email="ubald@ubaldesign.com">François Ubald Brien</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <export>
+
+  </export>
+</package>

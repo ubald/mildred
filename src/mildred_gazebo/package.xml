@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mildred_gazebo</name>
+  <version>0.0.0</version>
+  <description>The Mildred hexapod gazebo simulation files.</description>
+  <maintainer email="ubald@ubaldesign.com">François Ubald Brien</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>mildred_description</depend>
+
+  <export>
+  </export>
+</package>

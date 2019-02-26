@@ -1,0 +1,343 @@
+<?xml version="1.0"?>
+<robot name="mildred"
+    xmlns:xacro="http://ros.org/wiki/xacro"
+    xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+    xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+    xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor">
+
+    <gazebo>
+        <!-- GazeboRosControllerMangager -->
+        <!----><controller:gazebo_ros_controller_manager name="gazebo_ros_controller_manager" plugin="libgazebo_ros_controller_manager.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>1000.0</updateRate>
+        <robotParam>robot_description</robotParam>
+        <robotNamespace>/</robotNamespace>
+    </controller:gazebo_ros_controller_manager><!-- -->
+
+        <!--<controller:gazebo_ros_imu name="imu_controller" plugin="libgazebo_ros_imu.so">
+            <alwaysOn>true</alwaysOn>
+            <updateRate>1000.0</updateRate>
+            <bodyName>thorax</bodyName>
+            <topicName>orocos_gazebo_interface/imu</topicName>
+            <xyzOffsets>0 0 0</xyzOffsets>
+            <rpyOffsets>0 0 0</rpyOffsets>
+            <interface:position name="imu_position_iface"/>
+        </controller:gazebo_ros_imu>-->
+
+        <!--<controller:gazebo_ros_p3d name="p3d_controller" plugin="libgazebo_ros_p3d.so">
+            <alwaysOn>true</alwaysOn>
+            <updateRate>1000.0</updateRate>
+            <bodyName>thorax</bodyName>
+            <topicName>orocos_gazebo_interface/p3d</topicName>
+            <gauzianNoise>0.0</gauzianNoise>
+            <frameName>world</frameName>
+            <xyzOffsets>0 0 0</xyzOffsets>
+            <rpyOffsets>0 0 0</rpyOffsets>
+            <interface:position name="p3d_position_iface"/>
+        </controller:gazebo_ros_p3d>-->
+
+    </gazebo>
+
+    <xacro:property name="thorax_radius" value="0.060" />
+
+    <link name="base_link">
+    </link>
+    <joint name="thorax_to_base" type="fixed">
+        <parent link="base_link"/>
+        <child link="thorax"/>
+        <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 0.00" />
+    </joint>
+
+    <link name="thorax">
+        <visual>
+            <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 0.00" />
+            <geometry>
+                <cylinder radius="${thorax_radius}" length="0.02" />
+            </geometry>
+            <material name="yellow">
+                <color rgba="255 255 0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <cylinder radius="${thorax_radius}" length="0.02" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.5"/>
+            <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+        </inertial>
+    </link>
+    <gazebo reference="thorax">
+        <material>Gazebo/Yellow</material>
+        <turnGravityOff>false</turnGravityOff>
+    </gazebo>
+    
+    <!-- Joint Properties -->
+    <xacro:property name="TC_joint_lower_limit" value="-${pi/2}" />
+    <xacro:property name="TC_joint_upper_limit" value="${pi/2}" />
+    <xacro:property name="TC_joint_effort" value="10000" />
+    <xacro:property name="TC_joint_velocity" value="100" />
+
+    <xacro:property name="CF_joint_lower_limit" value="-${3*pi/4}" />
+    <xacro:property name="CF_joint_upper_limit" value="${pi/2}" />
+    <xacro:property name="CF_joint_effort" value="10000" />
+    <xacro:property name="CF_joint_velocity" value="100" />
+
+    <xacro:property name="FT_joint_lower_limit" value="0" />
+    <xacro:property name="FT_joint_upper_limit" value="${pi}" />
+    <xacro:property name="FT_joint_effort" value="10000" />
+    <xacro:property name="FT_joint_velocity" value="100" />
+
+    <xacro:property name="coxa_length" value="0.04" />
+    <xacro:property name="femur_length" value="0.120" />
+    <xacro:property name="tibia_length" value="0.150" />
+
+    <xacro:property name="damping" value="0.5" />
+    <xacro:property name="friction" value="1" />
+
+    <!-- Leg Macro -->
+    <xacro:macro name="leg" params="suffix angle x y">
+
+        <!-- Link 0/Body->Leg -->
+        <joint name="leg_joint_${suffix}" type="fixed">
+            <parent link="thorax" />
+            <child link="leg_${suffix}" />
+            <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 ${angle}" />
+        </joint>
+        <link name="leg_${suffix}">
+            <visual>
+                <origin xyz="${thorax_radius/2} 0.000 0.00" rpy="0.00 ${pi/2} 0.00" />
+                <geometry>
+                    <cylinder radius="0.005" length="${thorax_radius}" />
+                </geometry>
+                <material name="blue">
+                    <color rgba="0 0 255 1"/>
+                </material>
+            </visual>
+            <collision>
+                <origin xyz="${thorax_radius/2} 0.000 0.00" rpy="0.00 ${pi/2} 0.00" />
+                <geometry>
+                    <cylinder radius="0.005" length="${thorax_radius}" />
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.1"/>
+                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+            </inertial>
+        </link>
+        <gazebo reference="leg_${suffix}">
+            <material>Gazebo/Blue</material>
+            <turnGravityOff>false</turnGravityOff>
+        </gazebo>
+
+        <!-- Link 1/Coxa -->
+        <joint name="TC_joint_${suffix}" type="revolute">
+            <parent link="leg_${suffix}" />
+            <child link="coxa_${suffix}" />
+            <origin xyz="${thorax_radius} 0.00 0.00" rpy="0.00 0.00 0.00" />
+            <axis xyz="0.00 0.00 1.00" />
+            <limit lower="${TC_joint_lower_limit}" upper="${TC_joint_upper_limit}" effort="${TC_joint_effort}" velocity="${TC_joint_velocity}" />
+            <dynamics damping="${damping}" friction="${friction}" />
+        </joint>
+        <link name="coxa_${suffix}">
+            <visual>
+                <origin xyz="${coxa_length/2} 0.000 0.00" rpy="0.00 ${pi/2} 0.00" />
+                <geometry>
+                    <cylinder radius="0.005" length="${coxa_length}" />
+                </geometry>
+                <material name="blue">
+                    <color rgba="0 0 255 1"/>
+                </material>
+            </visual>
+            <collision>
+                <origin xyz="${coxa_length/2} 0.000 0.00" rpy="0.00 ${pi/2} 0.00" />
+                <geometry>
+                    <cylinder radius="0.005" length="${coxa_length}" />
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.01"/>
+                <origin xyz="${coxa_length/2} 0.00 0.00" rpy="0.00 0.00 0.00" />
+                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+            </inertial>
+        </link>
+        <gazebo reference="coxa_${suffix}">
+            <material>Gazebo/Blue</material>
+            <turnGravityOff>false</turnGravityOff>
+        </gazebo>
+
+        <!-- Link 2/Femur -->
+        <joint name="CF_joint_${suffix}" type="revolute">
+            <parent link="coxa_${suffix}" />
+            <child link="femur_${suffix}" />
+            <origin xyz="${coxa_length} 0.00 0.00" rpy="0.00 0.00 0.00" />
+            <axis xyz="0.00 1.00 0.00" />
+            <limit lower="${CF_joint_lower_limit}" upper="${CF_joint_upper_limit}" effort="${CF_joint_effort}" velocity="${CF_joint_velocity}" />
+            <dynamics damping="${damping}" friction="${friction}" />
+        </joint>
+        <link name="femur_${suffix}">
+            <visual>
+                <origin xyz="${femur_length/2} 0.000 0.00" rpy="0.00 ${pi/2} 0.00" />
+                <geometry>
+                    <cylinder radius="0.005" length="${femur_length}" />
+                </geometry>
+                <material name="blue">
+                    <color rgba="0 0 255 1"/>
+                </material>
+            </visual>
+            <collision>
+                <origin xyz="${femur_length/2} 0.000 0.00" rpy="0.00 ${pi/2} 0.00" />
+                <geometry>
+                    <cylinder radius="0.005" length="${femur_length}" />
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.01"/>
+                <origin xyz="${femur_length/2} 0.00 0.00" rpy="0.00 0.00 0.00" />
+                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+            </inertial>
+        </link>
+        <gazebo reference="femur_${suffix}">
+            <material>Gazebo/Blue</material>
+            <turnGravityOff>false</turnGravityOff>
+        </gazebo>
+
+        <!-- Link 3/Tibia -->
+        <joint name="FT_joint_${suffix}" type="revolute">
+            <parent link="femur_${suffix}" />
+            <child link="tibia_${suffix}" />
+            <origin xyz="${femur_length} 0.00 0.00" rpy="0.00 0.00 0.00" />
+            <axis xyz="0.00 1.00 0.00" />
+            <limit lower="${FT_joint_lower_limit}" upper="${FT_joint_upper_limit}" effort="${FT_joint_effort}" velocity="${FT_joint_velocity}" />
+            <dynamics damping="${damping}" friction="${friction}" />
+        </joint>
+        <link name="tibia_${suffix}">
+            <visual>
+                <origin xyz="${tibia_length/2} 0.000 0.00" rpy="0.00 ${pi/2} 0.00" />
+                <geometry>
+                    <cylinder radius="0.005" length="${tibia_length}" />
+                </geometry>
+                <material name="blue">
+                    <color rgba="0 0 255 1"/>
+                </material>
+            </visual>
+            <collision>
+                <origin xyz="${tibia_length/2} 0.000 0.00" rpy="0.00 ${pi/2} 0.00" />
+                <geometry>
+                    <cylinder radius="0.005" length="${tibia_length}" />
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.01"/>
+                <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 0.00" />
+                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+            </inertial>
+        </link>
+        <gazebo reference="tibia_${suffix}">
+            <material>Gazebo/Blue</material>
+            <turnGravityOff>false</turnGravityOff>
+            <selfCollide>true</selfCollide>
+        </gazebo>
+
+        <!-- Tip/Foot -->
+        <joint name="foot_joint_${suffix}" type="fixed">
+            <parent link="tibia_${suffix}"/>
+            <child link="foot_frame_${suffix}"/>
+            <origin xyz="${tibia_length} 0.00 0.00" rpy="0.00 0.00 0.00" />
+        </joint>
+        <link name="foot_frame_${suffix}">
+            <visual>
+                <origin xyz="0 0 0" />
+                <geometry>
+                    <sphere radius="0.01" />
+                </geometry>
+                <material name="red">
+                    <color rgba="255 0 0 1"/>
+                </material>
+            </visual>
+            <collision name="foot_collision">
+                <origin xyz="0 0 0" />
+                <geometry>
+                    <sphere radius="0.01" />
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.01"/>
+                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+            </inertial>
+
+
+
+
+
+
+            <!--<collision name="collision_tip" laser_retro="100.0">
+				<origin pose="0.0 0.0 0.0 0.0 0.0 0.0"/>
+				<max_contacts>250</max_contacts>
+				<geometry>
+				  <sphere radius="0.01"/>
+				</geometry>
+				<surface>
+				  <friction>
+				    <ode mu="0.5" mu2="0.2" fdir1="1.0 0 0" slip1="0" slip2="0"/>
+				  </friction>
+				  <bounce restitution_coefficient="0" threshold="1000000.0"/>
+				  <contact>
+				    <ode soft_cfm="0" soft_erp="0.2" kp="1e15" kd="1e13" max_vel="100.0" min_depth="0.0001"/>
+				  </contact>
+				</surface>
+			</collision>-->
+
+        </link>
+        <gazebo reference="foot_frame_${suffix}">
+            <material>Gazebo/Red</material>
+            <turnGravityOff>false</turnGravityOff>
+
+            <selfCollide>true</selfCollide>
+            <sensor:contact name="foot_contact_sensor_${suffix}">
+                <geom>foot_frame_${suffix}_geom</geom>
+                <updateRate>100.0</updateRate>
+                <controller:gazebo_ros_bumper name="foot_contact_sensor_${suffix}_gazebo_ros_bumper_controller" plugin="libgazebo_ros_bumper.so">
+                    <alwaysOn>true</alwaysOn>
+                    <updateRate>100.0</updateRate>
+                    <frameName>foot_frame_${suffix}</frameName>
+                    <bumperTopicName>foot_contact_sensor_${suffix}_bumper</bumperTopicName>
+                    <interface:bumper name="foot_contact_sensor_${suffix}_bumper_iface" />
+                </controller:gazebo_ros_bumper>
+            </sensor:contact>
+
+        </gazebo>
+
+        <!-- Transmissions -->
+        <transmission name="TC_trans_${suffix}" type="pr2_mechanism_model/SimpleTransmission">
+            <actuator name="TC_motor_${suffix}" />
+            <joint name="TC_joint_${suffix}" />
+            <mechanicalReduction>1</mechanicalReduction>
+            <motorTorqueConstant>1</motorTorqueConstant>
+        </transmission>
+        <transmission name="CF_trans_${suffix}" type="pr2_mechanism_model/SimpleTransmission">
+            <actuator name="CF_motor_${suffix}" />
+            <joint name="CF_joint_${suffix}" />
+            <mechanicalReduction>1</mechanicalReduction>
+            <motorTorqueConstant>1</motorTorqueConstant>
+        </transmission>
+        <transmission name="FT_trans_${suffix}" type="pr2_mechanism_model/SimpleTransmission">
+            <actuator name="FT_motor_${suffix}" />
+            <joint name="FT_joint_${suffix}" />
+            <mechanicalReduction>1</mechanicalReduction>
+            <motorTorqueConstant>1</motorTorqueConstant>
+        </transmission>
+
+    </xacro:macro>
+
+    <xacro:leg suffix="0" x="0" y="0" angle="${pi/4}" />
+    <xacro:leg suffix="1" x="0" y="0" angle="${pi/2}" />
+    <xacro:leg suffix="2" x="0" y="0" angle="${3*pi/4}" />
+
+    <xacro:leg suffix="3" x="0" y="0" angle="${7*pi/4}" />
+    <xacro:leg suffix="4" x="0" y="0" angle="${3*pi/2}" />
+    <xacro:leg suffix="5" x="0" y="0" angle="${5*pi/4}" />
+
+</robot>

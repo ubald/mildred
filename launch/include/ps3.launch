@@ -1,0 +1,4 @@
+<launch>
+    <node name="ps3_sixaxis_driver" pkg="ps3joy" type="ps3joy_node.py" />
+    <node name="joystick_driver" pkg="joy" type="joy" />
+</launch>
