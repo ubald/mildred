@@ -1,5 +1,8 @@
 <sdf version="1.4">
     <world name="default">
+        <scene>
+            <shadows>0</shadows>
+        </scene>
         <include>
             <uri>model://sun</uri>
         </include>

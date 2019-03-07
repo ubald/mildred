@@ -12,7 +12,7 @@
   <depend>std_msgs</depend>
   <depend>joy</depend>
   <depend>ps3joy</depend>
-  <depend>mildred_</depend>
+  <depend>mildred_core</depend>
 
   <export>
 

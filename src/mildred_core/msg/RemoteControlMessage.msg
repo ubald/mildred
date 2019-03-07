@@ -1,0 +1,3 @@
+Point2D velocity
+Point3D rotation
+Point3D position
