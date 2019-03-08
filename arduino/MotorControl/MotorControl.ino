@@ -10,8 +10,8 @@ float ONE_EIGHTY_ON_PI = 180 / M_PI;
 
 void onLegsPositions( const uwalker::LegsJoints& legs_msg )
 {
-	for ( int i = 0 ; i < 1; i++ ) {
-		for ( int j = 0; j < 3; j++ ) {
+	for ( int i = 0 ; i < 1; ++i ) {
+		for ( int j = 0; j < 3; ++j ) {
 			leg[i][j].write( legs_msg.leg[i].joint[j] * ONE_EIGHTY_ON_PI );
 		}
 	}

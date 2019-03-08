@@ -1,14 +1,14 @@
-#include "mildred_teleop_ps3.h"
+#include "mildred_teleop/mildred_teleop_ps3.h"
 
 int main(int argc, char **argv) {
     //Initialize values
-    for (int i = 0; i < PS3_BUTTON_COUNT; i++) {
+    for (int i = 0; i < PS3_BUTTON_COUNT; ++i) {
         lastButtonValue[i] = false;
     }
-    for (int i = 0; i < PS3_AXIS_COUNT; i++) {
+    for (int i = 0; i < PS3_AXIS_COUNT; ++i) {
         lastAxisValue[i] = 0.00f;
     }
-    for (int i = 0; i < PS3_AXIS_COUNT; i++) {
+    for (int i = 0; i < PS3_AXIS_COUNT; ++i) {
         axisChanged[i] = false;
     }
 
@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 
 void joyCallback(sensor_msgs::Joy joyMsg) {
     //Generic Button events
-    for (int i = 0; i < PS3_BUTTON_COUNT; i++) {
+    for (int i = 0; i < PS3_BUTTON_COUNT; ++i) {
         if (joyMsg.buttons[i] != lastButtonValue[i]) {
             if (joyMsg.buttons[i]) {
                 //Button pressed
@@ -43,7 +43,7 @@ void joyCallback(sensor_msgs::Joy joyMsg) {
     }
 
     //Generic Axis Events
-    for (int i = 0; i < PS3_AXIS_COUNT; i++) {
+    for (int i = 0; i < PS3_AXIS_COUNT; ++i) {
         if (joyMsg.axes[i] != lastAxisValue[i]) {
             //Axis Changed
             axisChanged[i] = true;

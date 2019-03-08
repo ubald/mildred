@@ -1,0 +1,14 @@
+<launch>
+    <arg name="usb_port" default="/dev/ttyACM0"/>
+    <arg name="dxl_baud_rate" default="57600"/>
+
+
+    <node name="mildred_dynamixel" pkg="mildred_dynamixel" type="controller" required="true" output="screen" args="$(arg usb_port) $(arg dxl_baud_rate)">
+        <param name="joints_config_file" value="$(find mildred_dynamixel)/config/mildred.yaml"/>
+        <rosparam>
+            publish_period: 0.010
+            dxl_read_period: 0.010
+            dxl_write_period: 0.010
+        </rosparam>
+    </node>
+</launch>

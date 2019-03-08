@@ -49,7 +49,7 @@ void update_dxl() {
     length = CMD_PORT.available();
     if (length > 0) {
         drv_dxl_tx_enable(0, TRUE);
-        for (i = 0; i < length; i++) {
+        for (i = 0; i < length; ++i) {
             DXL_PORT.write(CMD_PORT.read());
             DXL_PORT.flush();
         }
@@ -64,7 +64,7 @@ void update_dxl() {
         if (length > DXL_TX_BUFFER_LENGTH) {
             length = DXL_TX_BUFFER_LENGTH;
         }
-        for (i = 0; i < length; i++) {
+        for (i = 0; i < length; ++i) {
             tx_buffer[i] = DXL_PORT.read();
         }
         CMD_PORT.write(tx_buffer, length);
