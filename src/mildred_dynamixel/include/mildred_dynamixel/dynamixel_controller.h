@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include <ros/ros.h>
 
 #include <yaml-cpp/yaml.h>
@@ -24,10 +26,10 @@
 
 // #define DEBUG
 
-typedef struct {
-    std::string itemName;
-    uint32_t    value;
-} DynamixelConfigValue;
+//typedef struct {
+//    std::string field;
+//    uint32_t value;
+//} ControlTableValue;
 
 class DynamixelController {
 private:
@@ -49,18 +51,18 @@ private:
     // ROS Service Client
 
     // Dynamixel Workbench Parameters
-    std::string        portName;
-    uint32_t           baudRate;
+    std::string portName;
+    uint32_t baudRate;
     DynamixelWorkbench *dynamixelWorkbench;
 
-    std::map<std::string, uint32_t> dynamixels{};
+    std::unordered_map<std::string, uint8_t> jointIds{};
+    std::unordered_map<std::string, uint32_t> commonJointConfig{};
+    std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> jointConfig{};
 
-    std::vector<std::pair<std::string, DynamixelConfigValue>> dynamixelJointConfigs{};
-
-    std::map<std::string, const ControlItem *>   controlItems;
+    std::map<std::string, const ControlItem *> controlItems;
     dynamixel_workbench_msgs::DynamixelStateList dynamixelStateList;
-    sensor_msgs::JointState                      jointStateMessage;
-    std::vector<WayPoint>                        presentGoal;
+    sensor_msgs::JointState jointStateMessage;
+    std::vector<WayPoint> presentGoal;
 
     double readPeriod;
     double writePeriod;
@@ -87,12 +89,14 @@ public:
     bool getPresentPosition(std::vector<std::string> dynamixelNames);
 
     double getReadPeriod() { return readPeriod; }
+
     double getWritePeriod() { return writePeriod; }
+
     double getPublishPeriod() { return publishPeriod; }
 
     void readCallback(const ros::TimerEvent &);
     void writeCallback(const ros::TimerEvent &);
     void publishCallback(const ros::TimerEvent &);
 
-    bool dynamixelCommandMsgCallback(dynamixel_workbench_msgs::DynamixelCommand::Request &req,dynamixel_workbench_msgs::DynamixelCommand::Response &res);
+    bool dynamixelCommandMsgCallback(dynamixel_workbench_msgs::DynamixelCommand::Request &req, dynamixel_workbench_msgs::DynamixelCommand::Response &res);
 };
