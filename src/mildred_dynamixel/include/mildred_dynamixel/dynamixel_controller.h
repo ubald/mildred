@@ -2,14 +2,11 @@
 
 #include <unordered_map>
 
-#include <ros/ros.h>
-
 #include <yaml-cpp/yaml.h>
 
-#include <sensor_msgs/JointState.h>
-#include <geometry_msgs/Twist.h>
-#include <trajectory_msgs/JointTrajectory.h>
-#include <trajectory_msgs/JointTrajectoryPoint.h>
+#include <rclcpp/rclcpp.hpp>
+
+#include "sensor_msgs/msg/joint_state.h"
 
 #include <dynamixel_workbench_toolbox/dynamixel_workbench.h>
 #include <dynamixel_workbench_msgs/DynamixelStateList.h>
@@ -29,20 +26,20 @@
 class DynamixelController {
 private:
     // ROS NodeHandle
-    ros::NodeHandle nodeHandle;
-    ros::NodeHandle privateNodeHandle;
+    rclcpp::NodeHandle nodeHandle;
+    rclcpp::NodeHandle privateNodeHandle;
 
     // ROS Parameters
 
     // ROS Topic Publisher
-    ros::Publisher dynamixelStatePublisher;
-    ros::Publisher jointStatePublisher;
+    rclcpp::Publisher dynamixelStatePublisher;
+    rclcpp::Publisher jointStatePublisher;
 
     // ROS Topic Subscriber
-    ros::Subscriber jointControlSubscriber;
+    rclcpp::Subscriber jointControlSubscriber;
 
     // ROS Service Server
-    ros::ServiceServer dynamixelCommandService;
+    rclcpp::ServiceServer dynamixelCommandService;
 
     // ROS Service Client
 
@@ -87,9 +84,9 @@ public:
     double getWritePeriod() { return writePeriod; }
     double getPublishPeriod() { return publishPeriod; }
 
-    void readCallback(const ros::TimerEvent &);
-    void writeCallback(const ros::TimerEvent &);
-    void publishCallback(const ros::TimerEvent &);
+    void readCallback(const rclcpp::TimerEvent &);
+    void writeCallback(const rclcpp::TimerEvent &);
+    void publishCallback(const rclcpp::TimerEvent &);
 
     bool dynamixelCommandMsgCallback(dynamixel_workbench_msgs::DynamixelCommand::Request &req, dynamixel_workbench_msgs::DynamixelCommand::Response &res);
 };

@@ -243,9 +243,9 @@ void DynamixelController::initServices() {
     dynamixelCommandService = privateNodeHandle.advertiseService("dynamixel_command", &DynamixelController::dynamixelCommandMsgCallback, this);
 }
 
-void DynamixelController::readCallback(const ros::TimerEvent &) {
+void DynamixelController::readCallback(const rclcpp::TimerEvent &) {
 #ifdef DEBUG
-    static double priv_read_secs = ros::Time::now().toSec();
+    static double priv_read_secs = rclcpp::Time::now().toSec();
 #endif
     const char *log = nullptr;
 
@@ -306,19 +306,19 @@ void DynamixelController::readCallback(const ros::TimerEvent &) {
 #endif
 
 #ifdef DEBUG
-    ROS_WARN("[readCallback] diff_secs : %f", ros::Time::now().toSec() - priv_read_secs);
-    priv_read_secs = ros::Time::now().toSec();
+    ROS_WARN("[readCallback] diff_secs : %f", rlcpp::Time::now().toSec() - priv_read_secs);
+    priv_read_secs = rlcpp::Time::now().toSec();
 #endif
 }
 
-void DynamixelController::publishCallback(const ros::TimerEvent &) {
+void DynamixelController::publishCallback(const rlcpp::TimerEvent &) {
 #ifdef DEBUG
-    static double priv_pub_secs =ros::Time::now().toSec();
+    static double priv_pub_secs =rlcpp::Time::now().toSec();
 #endif
     // TODO: Allow disabling
     dynamixelStatePublisher.publish(dynamixelStates);
 
-    jointState.header.stamp = ros::Time::now();
+    jointState.header.stamp = rlcpp::Time::now();
     jointState.name.clear();
     jointState.position.clear();
     jointState.velocity.clear();
@@ -335,14 +335,14 @@ void DynamixelController::publishCallback(const ros::TimerEvent &) {
 
     jointStatePublisher.publish(jointState);
 #ifdef DEBUG
-    ROS_WARN("[publishCallback] diff_secs : %f", ros::Time::now().toSec() - priv_pub_secs);
-    priv_pub_secs = ros::Time::now().toSec();
+    ROS_WARN("[publishCallback] diff_secs : %f", rlcpp::Time::now().toSec() - priv_pub_secs);
+    priv_pub_secs = rlcpp::Time::now().toSec();
 #endif
 }
 
-void DynamixelController::writeCallback(const ros::TimerEvent &) {
+void DynamixelController::writeCallback(const rlcpp::TimerEvent &) {
 #ifdef DEBUG
-    static double priv_pub_secs =ros::Time::now().toSec();
+    static double priv_pub_secs =rlcpp::Time::now().toSec();
 #endif
     //const char *log = nullptr;
     //
@@ -383,8 +383,8 @@ void DynamixelController::writeCallback(const ros::TimerEvent &) {
     //}
 
 #ifdef DEBUG
-    ROS_WARN("[writeCallback] diff_secs : %f", ros::Time::now().toSec() - priv_pub_secs);
-    priv_pub_secs = ros::Time::now().toSec();
+    ROS_WARN("[writeCallback] diff_secs : %f", rlcpp::Time::now().toSec() - priv_pub_secs);
+    priv_pub_secs = rlcpp::Time::now().toSec();
 #endif
 }
 
@@ -409,8 +409,8 @@ bool DynamixelController::dynamixelCommandMsgCallback(dynamixel_workbench_msgs::
 }
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "mildred_dynamixel_controller");
-    ros::NodeHandle nodeHandle{};
+    rlcpp::init(argc, argv, "mildred_dynamixel_controller");
+    rlcpp::NodeHandle nodeHandle{};
 
     if (argc < 2) {
         ROS_ERROR("Please set '-port_name' and  '-baud_rate' arguments for connected Dynamixels");
@@ -429,13 +429,13 @@ int main(int argc, char **argv) {
 
     ROS_INFO("Creating timers");
 
-    ros::Timer readTimer = nodeHandle.createTimer(ros::Duration(dynamixelController.getReadPeriod()), &DynamixelController::readCallback, &dynamixelController);
-    ros::Timer writeTimer = nodeHandle.createTimer(ros::Duration(dynamixelController.getWritePeriod()), &DynamixelController::writeCallback, &dynamixelController);
-    ros::Timer publishTimer = nodeHandle.createTimer(ros::Duration(dynamixelController.getPublishPeriod()), &DynamixelController::publishCallback, &dynamixelController);
+    rlcpp::Timer readTimer = nodeHandle.createTimer(rlcpp::Duration(dynamixelController.getReadPeriod()), &DynamixelController::readCallback, &dynamixelController);
+    rlcpp::Timer writeTimer = nodeHandle.createTimer(rlcpp::Duration(dynamixelController.getWritePeriod()), &DynamixelController::writeCallback, &dynamixelController);
+    rlcpp::Timer publishTimer = nodeHandle.createTimer(rlcpp::Duration(dynamixelController.getPublishPeriod()), &DynamixelController::publishCallback, &dynamixelController);
 
     ROS_INFO("Ready!");
 
-    ros::spin();
+    rlcpp::spin();
 
     return 0;
 }

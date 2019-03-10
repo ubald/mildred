@@ -1,17 +1,18 @@
 <?xml version="1.0"?>
-<package format="2">
-    <name>mildred_gazebo</name>
-    <version>0.0.0</version>
-    <description>The Mildred hexapod gazebo simulation files.</description>
-    <maintainer email="ubald@ubaldesign.com">François Ubald Brien</maintainer>
-    <license>MIT</license>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mildred_gazebo</name>
+  <version>0.0.0</version>
+  <description>The Mildred hexapod gazebo simulation files.</description>
+  <maintainer email="ubald@ubaldesign.com">François Ubald Brien</maintainer>
+  <license>MIT</license>
 
-    <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-    <exec_depend>mildred_description</exec_depend>
-    <exec_depend>gazebo_ros</exec_depend>
-    <exec_depend>controller_manager</exec_depend>
-    <exec_depend>joint_state_controller</exec_depend>
-    <exec_depend>robot_state_publisher</exec_depend>
-    <exec_depend>effort_controllers</exec_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

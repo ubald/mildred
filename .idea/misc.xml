@@ -6,6 +6,9 @@
   <component name="CidrRootsConfiguration">
     <excludeRoots>
       <file path="$PROJECT_DIR$/arduino/libraries" />
+      <file path="$PROJECT_DIR$/build" />
+      <file path="$PROJECT_DIR$/install" />
+      <file path="$PROJECT_DIR$/log" />
     </excludeRoots>
   </component>
   <component name="JavaScriptSettings">
