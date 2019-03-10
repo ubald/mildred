@@ -208,7 +208,7 @@ install(DIRECTORY launch
     )
 
 install(FILES
-    config/mildred.yaml
+    config/config.yaml
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
     )
 

@@ -9,7 +9,8 @@ A ROS Based Hexapod
     ros-melodic-moveit \
     ros-melodic-rosserial-arduino \
     ros-melodic-joy ros-melodic-joystick-drivers \  
-    ros-melodic-dynamixel-sdk ros-melodic-dynamixel-workbench
+    ros-melodic-dynamixel-sdk ros-melodic-dynamixel-workbench \
+    liburdfdom-tools
 
 ###### Using Bash
 
@@ -38,6 +39,9 @@ Additional Boards Manager URL:
     
 ## Dynamixel Workbench
 http://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_workbench
+
+## LEAP Motion SDK
+https://developer.leapmotion.com/sdk/v2
 
 ## Running
 

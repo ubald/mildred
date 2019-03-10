@@ -1,18 +1,15 @@
 <?xml version="1.0"?>
 <robot name="mildred"
-    xmlns:xacro="http://ros.org/wiki/xacro"
-    xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
-    xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
-    xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor">
+    xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <gazebo>
         <!-- GazeboRosControllerMangager -->
-        <!----><controller:gazebo_ros_controller_manager name="gazebo_ros_controller_manager" plugin="libgazebo_ros_controller_manager.so">
+        <!--<controller:gazebo_ros_controller_manager name="gazebo_ros_controller_manager" plugin="libgazebo_ros_controller_manager.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>1000.0</updateRate>
         <robotParam>robot_description</robotParam>
         <robotNamespace>/</robotNamespace>
-    </controller:gazebo_ros_controller_manager><!-- -->
+    </controller:gazebo_ros_controller_manager> -->
 
         <!--<controller:gazebo_ros_imu name="imu_controller" plugin="libgazebo_ros_imu.so">
             <alwaysOn>true</alwaysOn>
@@ -38,10 +35,26 @@
 
     </gazebo>
 
-    <xacro:property name="thorax_radius" value="0.060" />
+    <xacro:property name="thorax_radius" value="0.064" />
+    <xacro:property name="thorax_height" value="0.040" />
+    <xacro:property name="coxa_length" value="0.03525" />
+    <xacro:property name="femur_length" value="0.090" />
+    <xacro:property name="femur_angle" value="36" />
+    <xacro:property name="tibia_length" value="0.180" />
+    <xacro:property name="tibia_angle" value="21" />
 
-    <link name="base_link">
-    </link>
+    <!-- http://emanual.robotis.com/docs/en/dxl/x/xl430-w250/#specifications -->
+    <xacro:property name="max_torque" value="1.4" /> <!-- this is stall torque, graph shows 0.84 -->
+    <xacro:property name="max_velocity" value="${((2*pi)/60)*57}" /> <!-- rpm to rad/s -->
+
+    <xacro:macro name="default_inertial" params="mass">
+        <inertial>
+            <mass value="${mass}" />
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+        </inertial>
+    </xacro:macro>
+
+    <link name="base_link"/>
     <joint name="thorax_to_base" type="fixed">
         <parent link="base_link"/>
         <child link="thorax"/>
@@ -52,16 +65,16 @@
         <visual>
             <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 0.00" />
             <geometry>
-                <cylinder radius="${thorax_radius}" length="0.02" />
+                <cylinder radius="${thorax_radius}" length="${thorax_height}" />
             </geometry>
             <material name="yellow">
                 <color rgba="255 255 0 1"/>
             </material>
         </visual>
         <collision>
-            <origin xyz="0 0 0" rpy="0 0 0" />
+            <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 0.00" />
             <geometry>
-                <cylinder radius="${thorax_radius}" length="0.02" />
+                <cylinder radius="${thorax_radius}" length="${thorax_height}" />
             </geometry>
         </collision>
         <inertial>
@@ -73,29 +86,19 @@
         <material>Gazebo/Yellow</material>
         <turnGravityOff>false</turnGravityOff>
     </gazebo>
-    
+
     <!-- Joint Properties -->
-    <xacro:property name="TC_joint_lower_limit" value="-${pi/2}" />
-    <xacro:property name="TC_joint_upper_limit" value="${pi/2}" />
-    <xacro:property name="TC_joint_effort" value="10000" />
-    <xacro:property name="TC_joint_velocity" value="100" />
+    <xacro:property name="TC_joint_lower_limit" value="-1.4" />
+    <xacro:property name="TC_joint_upper_limit" value="1.4" />
 
-    <xacro:property name="CF_joint_lower_limit" value="-${3*pi/4}" />
-    <xacro:property name="CF_joint_upper_limit" value="${pi/2}" />
-    <xacro:property name="CF_joint_effort" value="10000" />
-    <xacro:property name="CF_joint_velocity" value="100" />
+    <xacro:property name="CF_joint_lower_limit" value="-1.6" />
+    <xacro:property name="CF_joint_upper_limit" value="1.8" />
 
-    <xacro:property name="FT_joint_lower_limit" value="0" />
-    <xacro:property name="FT_joint_upper_limit" value="${pi}" />
-    <xacro:property name="FT_joint_effort" value="10000" />
-    <xacro:property name="FT_joint_velocity" value="100" />
+    <xacro:property name="FT_joint_lower_limit" value="-1.7" />
+    <xacro:property name="FT_joint_upper_limit" value="2.0" />
 
-    <xacro:property name="coxa_length" value="0.04" />
-    <xacro:property name="femur_length" value="0.120" />
-    <xacro:property name="tibia_length" value="0.150" />
-
-    <xacro:property name="damping" value="0.5" />
-    <xacro:property name="friction" value="1" />
+    <xacro:property name="damping" value="0" />
+    <xacro:property name="friction" value="0" />
 
     <!-- Leg Macro -->
     <xacro:macro name="leg" params="suffix angle x y">
@@ -122,14 +125,15 @@
                     <cylinder radius="0.005" length="${thorax_radius}" />
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.1"/>
-                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
-            </inertial>
+            <xacro:default_inertial mass="0.001"/>
+            <!--<inertial>-->
+                <!--<mass value="0.001"/>-->
+                <!--<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>-->
+            <!--</inertial>-->
         </link>
         <gazebo reference="leg_${suffix}">
             <material>Gazebo/Blue</material>
-            <turnGravityOff>false</turnGravityOff>
+            <!--<turnGravityOff>false</turnGravityOff>-->
         </gazebo>
 
         <!-- Link 1/Coxa -->
@@ -138,12 +142,12 @@
             <child link="coxa_${suffix}" />
             <origin xyz="${thorax_radius} 0.00 0.00" rpy="0.00 0.00 0.00" />
             <axis xyz="0.00 0.00 1.00" />
-            <limit lower="${TC_joint_lower_limit}" upper="${TC_joint_upper_limit}" effort="${TC_joint_effort}" velocity="${TC_joint_velocity}" />
+            <limit lower="${TC_joint_lower_limit}" upper="${TC_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}" />
             <dynamics damping="${damping}" friction="${friction}" />
         </joint>
         <link name="coxa_${suffix}">
             <visual>
-                <origin xyz="${coxa_length/2} 0.000 0.00" rpy="0.00 ${pi/2} 0.00" />
+                <origin xyz="${coxa_length/2} 0.00 0.00" rpy="0.00 ${pi/2} 0.00" />
                 <geometry>
                     <cylinder radius="0.005" length="${coxa_length}" />
                 </geometry>
@@ -152,34 +156,35 @@
                 </material>
             </visual>
             <collision>
-                <origin xyz="${coxa_length/2} 0.000 0.00" rpy="0.00 ${pi/2} 0.00" />
+                <origin xyz="${coxa_length/2} 0.00 0.00" rpy="0.00 ${pi/2} 0.00" />
                 <geometry>
                     <cylinder radius="0.005" length="${coxa_length}" />
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.01"/>
-                <origin xyz="${coxa_length/2} 0.00 0.00" rpy="0.00 0.00 0.00" />
-                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
-            </inertial>
+            <xacro:default_inertial mass="0.162"/>
+            <!--<inertial>
+                <mass value="0.162035"/>
+                &lt;!&ndash;<origin xyz="${coxa_length/2} 0.00 0.00" rpy="0.00 0.00 0.00" />&ndash;&gt;
+                <inertia ixx="122.900" ixy="-0.776614" ixz="0.093274" iyy="39.430" iyz="3.511095" izz="111.100"/>
+            </inertial>-->
         </link>
         <gazebo reference="coxa_${suffix}">
             <material>Gazebo/Blue</material>
-            <turnGravityOff>false</turnGravityOff>
+            <!--<turnGravityOff>false</turnGravityOff>-->
         </gazebo>
 
         <!-- Link 2/Femur -->
         <joint name="CF_joint_${suffix}" type="revolute">
             <parent link="coxa_${suffix}" />
             <child link="femur_${suffix}" />
-            <origin xyz="${coxa_length} 0.00 0.00" rpy="0.00 0.00 0.00" />
-            <axis xyz="0.00 1.00 0.00" />
-            <limit lower="${CF_joint_lower_limit}" upper="${CF_joint_upper_limit}" effort="${CF_joint_effort}" velocity="${CF_joint_velocity}" />
+            <origin xyz="${coxa_length} 0.00 0.00" rpy="0.00 ${-femur_angle * (pi/180)} 0.00" />
+            <axis xyz="0.00 -1.00 0.00" />
+            <limit lower="${CF_joint_lower_limit}" upper="${CF_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}" />
             <dynamics damping="${damping}" friction="${friction}" />
         </joint>
         <link name="femur_${suffix}">
             <visual>
-                <origin xyz="${femur_length/2} 0.000 0.00" rpy="0.00 ${pi/2} 0.00" />
+                <origin xyz="${femur_length/2} 0.00 0.00" rpy="0.00 ${pi/2} 0.00" />
                 <geometry>
                     <cylinder radius="0.005" length="${femur_length}" />
                 </geometry>
@@ -193,24 +198,25 @@
                     <cylinder radius="0.005" length="${femur_length}" />
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.01"/>
-                <origin xyz="${femur_length/2} 0.00 0.00" rpy="0.00 0.00 0.00" />
-                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
-            </inertial>
+            <xacro:default_inertial mass="0.026"/>
+            <!--<inertial>
+                <mass value="0.025981"/>
+                &lt;!&ndash;<origin xyz="${femur_length/2} 0.00 0.00" rpy="0.00 0.00 0.00" />&ndash;&gt;
+                <inertia ixx="26.000" ixy="-0.008114" ixz="-0.010234" iyy="19.820" iyz="10.550" izz="24.500"/>
+            </inertial>-->
         </link>
         <gazebo reference="femur_${suffix}">
             <material>Gazebo/Blue</material>
-            <turnGravityOff>false</turnGravityOff>
+            <!--<turnGravityOff>false</turnGravityOff>-->
         </gazebo>
 
         <!-- Link 3/Tibia -->
         <joint name="FT_joint_${suffix}" type="revolute">
             <parent link="femur_${suffix}" />
             <child link="tibia_${suffix}" />
-            <origin xyz="${femur_length} 0.00 0.00" rpy="0.00 0.00 0.00" />
+            <origin xyz="${femur_length} 0.00 0.00" rpy="0.00 ${(90 - femur_angle + tibia_angle) * (pi/180)} 0.00" />
             <axis xyz="0.00 1.00 0.00" />
-            <limit lower="${FT_joint_lower_limit}" upper="${FT_joint_upper_limit}" effort="${FT_joint_effort}" velocity="${FT_joint_velocity}" />
+            <limit lower="${FT_joint_lower_limit}" upper="${FT_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}" />
             <dynamics damping="${damping}" friction="${friction}" />
         </joint>
         <link name="tibia_${suffix}">
@@ -229,16 +235,17 @@
                     <cylinder radius="0.005" length="${tibia_length}" />
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.01"/>
-                <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 0.00" />
-                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
-            </inertial>
+            <xacro:default_inertial mass="0.107"/>
+            <!--<inertial>
+                <mass value="0.107208"/>
+                &lt;!&ndash;<origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 0.00" />&ndash;&gt;
+                <inertia ixx="129.900" ixy="0.398172" ixz="0.103732" iyy="27.680" iyz="18.680" izz="122.200"/>
+            </inertial>-->
         </link>
         <gazebo reference="tibia_${suffix}">
             <material>Gazebo/Blue</material>
-            <turnGravityOff>false</turnGravityOff>
-            <selfCollide>true</selfCollide>
+            <!--<turnGravityOff>false</turnGravityOff>-->
+            <!--<selfCollide>true</selfCollide>-->
         </gazebo>
 
         <!-- Tip/Foot -->
@@ -263,71 +270,42 @@
                     <sphere radius="0.01" />
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.01"/>
-                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
-            </inertial>
-
-
-
-
-
-
-            <!--<collision name="collision_tip" laser_retro="100.0">
-				<origin pose="0.0 0.0 0.0 0.0 0.0 0.0"/>
-				<max_contacts>250</max_contacts>
-				<geometry>
-				  <sphere radius="0.01"/>
-				</geometry>
-				<surface>
-				  <friction>
-				    <ode mu="0.5" mu2="0.2" fdir1="1.0 0 0" slip1="0" slip2="0"/>
-				  </friction>
-				  <bounce restitution_coefficient="0" threshold="1000000.0"/>
-				  <contact>
-				    <ode soft_cfm="0" soft_erp="0.2" kp="1e15" kd="1e13" max_vel="100.0" min_depth="0.0001"/>
-				  </contact>
-				</surface>
-			</collision>-->
-
+            <xacro:default_inertial mass="0.001"/>
         </link>
         <gazebo reference="foot_frame_${suffix}">
             <material>Gazebo/Red</material>
-            <turnGravityOff>false</turnGravityOff>
-
-            <selfCollide>true</selfCollide>
-            <sensor:contact name="foot_contact_sensor_${suffix}">
-                <geom>foot_frame_${suffix}_geom</geom>
-                <updateRate>100.0</updateRate>
-                <controller:gazebo_ros_bumper name="foot_contact_sensor_${suffix}_gazebo_ros_bumper_controller" plugin="libgazebo_ros_bumper.so">
-                    <alwaysOn>true</alwaysOn>
-                    <updateRate>100.0</updateRate>
-                    <frameName>foot_frame_${suffix}</frameName>
-                    <bumperTopicName>foot_contact_sensor_${suffix}_bumper</bumperTopicName>
-                    <interface:bumper name="foot_contact_sensor_${suffix}_bumper_iface" />
-                </controller:gazebo_ros_bumper>
-            </sensor:contact>
-
         </gazebo>
 
         <!-- Transmissions -->
-        <transmission name="TC_trans_${suffix}" type="pr2_mechanism_model/SimpleTransmission">
-            <actuator name="TC_motor_${suffix}" />
-            <joint name="TC_joint_${suffix}" />
-            <mechanicalReduction>1</mechanicalReduction>
-            <motorTorqueConstant>1</motorTorqueConstant>
+
+        <transmission name="TC_trans_${suffix}">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="TC_joint_${suffix}">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="TC_motor_${suffix}">
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
         </transmission>
-        <transmission name="CF_trans_${suffix}" type="pr2_mechanism_model/SimpleTransmission">
-            <actuator name="CF_motor_${suffix}" />
-            <joint name="CF_joint_${suffix}" />
-            <mechanicalReduction>1</mechanicalReduction>
-            <motorTorqueConstant>1</motorTorqueConstant>
+
+        <transmission name="CF_trans_${suffix}">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="CF_joint_${suffix}">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="CF_motor_${suffix}">
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
         </transmission>
-        <transmission name="FT_trans_${suffix}" type="pr2_mechanism_model/SimpleTransmission">
-            <actuator name="FT_motor_${suffix}" />
-            <joint name="FT_joint_${suffix}" />
-            <mechanicalReduction>1</mechanicalReduction>
-            <motorTorqueConstant>1</motorTorqueConstant>
+
+        <transmission name="FT_trans_${suffix}">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="FT_joint_${suffix}">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="FT_motor_${suffix}">
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
         </transmission>
 
     </xacro:macro>
@@ -339,5 +317,11 @@
     <xacro:leg suffix="3" x="0" y="0" angle="${7*pi/4}" />
     <xacro:leg suffix="4" x="0" y="0" angle="${3*pi/2}" />
     <xacro:leg suffix="5" x="0" y="0" angle="${5*pi/4}" />
+
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+            <robotNamespace>/mildred</robotNamespace>
+        </plugin>
+    </gazebo>
 
 </robot>

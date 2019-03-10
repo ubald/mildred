@@ -10,6 +10,12 @@
 
   <depend>mildred_description</depend>
 
+  <depend>controller_manager</depend>
+  <depend>joint_state_controller</depend>
+  <depend>robot_state_publisher</depend>
+
+  <depend>effort_controllers</depend>
+
   <export>
   </export>
 </package>

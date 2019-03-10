@@ -1,13 +1,37 @@
 <launch>
+    <arg name="paused" default="false"/>
+    <arg name="use_sim_time" default="true"/>
+    <arg name="gui" default="true"/>
+    <arg name="headless" default="false"/>
+    <arg name="debug" default="false"/>
+    <arg name="model" default="$(find mildred_description)/urdf/mildred.urdf.xacro"/>
+
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
+
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(find mildred_gazebo)/worlds/mildred.world"/>
-        <arg name="paused" value="false"/>
-        <arg name="use_sim_time" value="true"/>
-        <arg name="gui" value="true"/>
-        <arg name="recording" value="false"/>
-        <arg name="debug" value="false"/>
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+        <arg name="gui" value="$(arg gui)" />
+        <arg name="headless" value="$(arg headless)"/>
+        <arg name="debug" value="$(arg debug)" />
     </include>
 
-    <param name="robot_description" command="$(find xacro)/xacro $(find mildred_description)/urdf/mildred.urdf.xacro" />
-    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model mildred" />
+    <!--<rosparam command="load" file="$(find mildred_gazebo)/config/joint_publish.yaml" ns="mildred_joint_state_controller" />-->
+    <!--<rosparam command="load" file="$(find mildred_gazebo)/config/joint_control.yaml" ns="mildred_joint_controller" />-->
+    <rosparam command="load" file="$(find mildred_gazebo)/config/mildred_control.yaml"/>
+
+    <node name="mildred_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
+          ns="/mildred"
+          args="joint_state_controller
+                joint_position_controller"/>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mildred_description)/config/mildred.rviz" />
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-z -1 -unpause -urdf -param robot_description -model mildred" respawn="false" output="screen" />
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" respawn="false" output="screen">
+        <param name="publish_frequency" type="double" value="30.0" />
+        <remap from="/joint_states" to="/mildred/joint_states" />
+    </node>
 </launch>

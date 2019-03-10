@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Check URDF" type="BashConfigurationType" factoryName="Bash">
+    <module name="mildred" />
+    <option name="INTERPRETER_OPTIONS" value="-i" />
+    <option name="INTERPRETER_PATH" value="" />
+    <option name="PROJECT_INTERPRETER" value="true" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/mildred_description" />
+    <option name="PARENT_ENVS" value="true" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/mildred_description/check.sh" />
+    <option name="PARAMETERS" value="" />
+    <method v="2" />
+  </configuration>
+</component>

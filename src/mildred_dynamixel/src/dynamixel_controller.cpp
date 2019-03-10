@@ -4,8 +4,7 @@ DynamixelController::DynamixelController(const std::string portName, const uint3
     : nodeHandle(""),
       privateNodeHandle("~"),
       portName(portName),
-      baudRate(baudRate),
-      moving(false) {
+      baudRate(baudRate) {
     readPeriod = privateNodeHandle.param<double>("dxl_read_period", 0.010f);
     writePeriod = privateNodeHandle.param<double>("dxl_write_period", 0.010f);
     publishPeriod = privateNodeHandle.param<double>("publish_period", 0.010f);
@@ -70,9 +69,10 @@ bool DynamixelController::initWorkbench() {
  * @return
  */
 bool DynamixelController::getDynamixelJointsInfo() {
-    ROS_DEBUG("Loading joints configuration");
+    std::string filePath = privateNodeHandle.param<std::string>("joints_config_file", "");
 
-    std::string filePath = nodeHandle.param<std::string>("joints_config_file", "");
+    ROS_DEBUG("Loading joints configuration [%s]", filePath.c_str());
+
     YAML::Node config = YAML::LoadFile(filePath);
     if (config == nullptr) {
         return false;
@@ -176,141 +176,70 @@ bool DynamixelController::initDynamixels() {
             }
         }
 
-        dynamixelWorkbench->torqueOn(dxl.second);
+        // dynamixelWorkbench->torqueOn(dxl.second);
     }
 
     return true;
 }
 
-/**
- * Not sure yet...
- */
 bool DynamixelController::initControlItems() {
     ROS_DEBUG("Initializing control items");
 
+    // Just get the first and assume all the same model
     auto it = jointIds.begin();
 
-    const ControlItem *goalPosition = dynamixelWorkbench->getItemInfo(it->second, "Goal_Position");
-    if (goalPosition == nullptr) { return false; }
+    goalPositionControl = dynamixelWorkbench->getItemInfo(it->second, "Goal_Position");
+    if (goalPositionControl == nullptr) { return false; }
 
-    const ControlItem *goalVelocity = dynamixelWorkbench->getItemInfo(it->second, "Goal_Velocity");
-    if (goalVelocity == nullptr) { goalVelocity = dynamixelWorkbench->getItemInfo(it->second, "Moving_Speed"); }
-    if (goalVelocity == nullptr) { return false; }
+    currentPositionControl = dynamixelWorkbench->getItemInfo(it->second, "Present_Position");
+    if (currentPositionControl == nullptr) { return false; }
 
-    const ControlItem *presentPosition = dynamixelWorkbench->getItemInfo(it->second, "Present_Position");
-    if (presentPosition == nullptr) { return false; }
+    currentVelocityControl = dynamixelWorkbench->getItemInfo(it->second, "Present_Velocity");
+    if (currentVelocityControl == nullptr) { currentVelocityControl = dynamixelWorkbench->getItemInfo(it->second, "Present_Speed"); }
+    if (currentVelocityControl == nullptr) { return false; }
 
-    const ControlItem *presentVelocity = dynamixelWorkbench->getItemInfo(it->second, "Present_Velocity");
-    if (presentVelocity == nullptr) { presentVelocity = dynamixelWorkbench->getItemInfo(it->second, "Present_Speed"); }
-    if (presentVelocity == nullptr) { return false; }
-
-    const ControlItem *presentCurrent = dynamixelWorkbench->getItemInfo(it->second, "Present_Current");
-    if (presentCurrent == nullptr) { presentCurrent = dynamixelWorkbench->getItemInfo(it->second, "Present_Load"); }
-    if (presentCurrent == nullptr) { return false; }
-
-    controlItems["Goal_Position"] = goalPosition;
-    controlItems["Goal_Velocity"] = goalVelocity;
-
-    controlItems["Present_Position"] = presentPosition;
-    controlItems["Present_Velocity"] = presentVelocity;
-    controlItems["Present_Current"] = presentCurrent;
+    currentLoadControl = dynamixelWorkbench->getItemInfo(it->second, "Present_Current");
+    if (currentLoadControl == nullptr) { currentLoadControl = dynamixelWorkbench->getItemInfo(it->second, "Present_Load"); }
+    if (currentLoadControl == nullptr) { return false; }
 
     return true;
 }
 
-/**
- * Not sure either what this does
- */
 bool DynamixelController::initSDKHandlers() {
     ROS_DEBUG("Initializing SDK handlers");
 
     const char *log = nullptr;
 
-    if (!dynamixelWorkbench->addSyncWriteHandler(controlItems["Goal_Position"]->address, controlItems["Goal_Position"]->data_length, &log)) {
+    if (!dynamixelWorkbench->addSyncWriteHandler(goalPositionControl->address, goalPositionControl->data_length, &log)) {
         ROS_ERROR("%s", log);
         return false;
     } else {
         ROS_INFO("%s", log);
     }
 
-    if (!dynamixelWorkbench->addSyncWriteHandler(controlItems["Goal_Velocity"]->address, controlItems["Goal_Velocity"]->data_length, &log)) {
+    uint16_t startAddress = std::min(currentPositionControl->address, currentLoadControl->address);
+    uint16_t readLength = currentPositionControl->data_length + currentVelocityControl->data_length + currentLoadControl->data_length;
+    if (!dynamixelWorkbench->addSyncReadHandler(startAddress, readLength, &log)) {
         ROS_ERROR("%s", log);
         return false;
-    } else {
-        ROS_INFO("%s", log);
-    }
-
-    if (dynamixelWorkbench->getProtocolVersion() == 2.0f) {
-        uint16_t startAddress = std::min(controlItems["Present_Position"]->address, controlItems["Present_Current"]->address);
-        uint16_t readLength = controlItems["Present_Position"]->data_length + controlItems["Present_Velocity"]->data_length + controlItems["Present_Current"]->data_length;
-        if (!dynamixelWorkbench->addSyncReadHandler(startAddress, readLength, &log)) {
-            ROS_ERROR("%s", log);
-            return false;
-        }
     }
 
     return true;
 }
 
-bool DynamixelController::getPresentPosition(std::vector<std::string> dynamixelNames) {
-    const char *log = nullptr;
-    bool result = true;
-
-    int32_t position[dynamixelNames.size()];
-    uint8_t idList[dynamixelNames.size()];
-    uint8_t idCount = 0;
-
-    for (auto const &name:dynamixelNames) {
-        idList[idCount++] = jointIds[name];
-    }
-
-    WayPoint wp;
-
-    if (dynamixelWorkbench->getProtocolVersion() == 2.0f) {
-        if (!dynamixelWorkbench->syncRead(SYNC_READ_HANDLER_FOR_PRESENT_POSITION_VELOCITY_CURRENT, idList, dynamixelNames.size(), &log)) {
-            ROS_ERROR("%s", log);
-            result = false;
-        }
-
-        if (dynamixelWorkbench->getSyncReadData(SYNC_READ_HANDLER_FOR_PRESENT_POSITION_VELOCITY_CURRENT, idList, idCount, controlItems["Present_Position"]->address, controlItems["Present_Position"]->data_length, position, &log)) {
-            for (uint8_t index = 0; index < idCount; ++index) {
-                wp.position = dynamixelWorkbench->convertValue2Radian(idList[index], position[index]);
-                presentGoal.push_back(wp);
-            }
-        } else {
-            ROS_ERROR("%s", log);
-            result = false;
-        }
-    } else if (dynamixelWorkbench->getProtocolVersion() == 1.0f) {
-        uint32_t read_position;
-        for (auto const &dxl:jointIds) {
-            if (!dynamixelWorkbench->readRegister((uint8_t) dxl.second, controlItems["Present_Position"]->address, controlItems["Present_Position"]->data_length, &read_position, &log)) {
-                ROS_ERROR("%s", log);
-                result = false;
-            }
-
-            wp.position = dynamixelWorkbench->convertValue2Radian((uint8_t) dxl.second, read_position);
-            presentGoal.push_back(wp);
-        }
-    }
-
-    return result;
-}
-
 void DynamixelController::initPublisher() {
     ROS_DEBUG("Initializing publishers");
-
-    dynamixelStateListPublisher = privateNodeHandle.advertise<dynamixel_workbench_msgs::DynamixelStateList>("dynamixel_state", 100);
-    jointStatePublisher = privateNodeHandle.advertise<sensor_msgs::JointState>("joint_states", 100);
+    dynamixelStatePublisher = nodeHandle.advertise<dynamixel_workbench_msgs::DynamixelStateList>("dynamixel_state", 100);
+    jointStatePublisher = nodeHandle.subscribe<sensor_msgs::JointState>("joint_states", 100);
 }
 
 void DynamixelController::initSubscriber() {
     ROS_DEBUG("Initializing subscribers");
+    jointControlSubscriber = nodeHandle.advertise<sensor_msgs::JointState>("joint_states", 100);
 }
 
 void DynamixelController::initServices() {
     ROS_DEBUG("Initializing services");
-
     dynamixelCommandService = privateNodeHandle.advertiseService("dynamixel_command", &DynamixelController::dynamixelCommandMsgCallback, this);
 }
 
@@ -321,66 +250,59 @@ void DynamixelController::readCallback(const ros::TimerEvent &) {
     const char *log = nullptr;
 
     dynamixel_workbench_msgs::DynamixelState dynamixelState[jointIds.size()];
-    dynamixelStateList.dynamixel_state.clear();
+    dynamixelStates.dynamixel_state.clear();
 
-    int32_t current[jointIds.size()];
+    int32_t load[jointIds.size()];
     int32_t velocity[jointIds.size()];
     int32_t position[jointIds.size()];
 
     uint8_t idList[jointIds.size()];
     uint8_t idCount = 0;
 
-    for (auto const &dxl:jointIds) {
+    //for (auto const &dxl:jointIds) {
+    //    jointState.name.push_back(dxl.first);
+    //    idList[idCount++] = dxl.second;
+    //}
+
+    for (auto const& dxl:jointIds){
         dynamixelState[idCount].name = dxl.first;
-        dynamixelState[idCount].id = (uint8_t) dxl.second;
-        idList[idCount++] = (uint8_t) dxl.second;
+        dynamixelState[idCount].id = dxl.second;
+        idList[idCount++] = dxl.second;
     }
+
 #ifndef DEBUG
-    if (!moving) {
+    // if (!moving) {
 #endif
-        if (dynamixelWorkbench->getProtocolVersion() == 2.0f) {
-            if (!dynamixelWorkbench->syncRead(SYNC_READ_HANDLER_FOR_PRESENT_POSITION_VELOCITY_CURRENT, idList, jointIds.size(), &log)) {
-                ROS_ERROR("%s", log);
-            }
+        if (!dynamixelWorkbench->syncRead(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, &log)) {
+            ROS_ERROR("%s", log);
+        }
 
-            if (!dynamixelWorkbench->getSyncReadData(SYNC_READ_HANDLER_FOR_PRESENT_POSITION_VELOCITY_CURRENT, idList, idCount, controlItems["Present_Current"]->address, controlItems["Present_Current"]->data_length, current, &log)) {
-                ROS_ERROR("%s", log);
-            }
+        if (!dynamixelWorkbench->getSyncReadData(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, currentLoadControl->address, currentLoadControl->data_length, load, &log)) {
+            ROS_ERROR("%s", log);
+        }
 
-            if (!dynamixelWorkbench->getSyncReadData(SYNC_READ_HANDLER_FOR_PRESENT_POSITION_VELOCITY_CURRENT, idList, idCount, controlItems["Present_Velocity"]->address, controlItems["Present_Velocity"]->data_length, velocity, &log)) {
-                ROS_ERROR("%s", log);
-            }
+        if (!dynamixelWorkbench->getSyncReadData(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, currentVelocityControl->address, currentVelocityControl->data_length, velocity, &log)) {
+            ROS_ERROR("%s", log);
+        }
 
-            if (!dynamixelWorkbench->getSyncReadData(SYNC_READ_HANDLER_FOR_PRESENT_POSITION_VELOCITY_CURRENT, idList, idCount, controlItems["Present_Position"]->address, controlItems["Present_Position"]->data_length, position, &log)) {
-                ROS_ERROR("%s", log);
-            }
+        if (!dynamixelWorkbench->getSyncReadData(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, currentPositionControl->address, currentPositionControl->data_length, position, &log)) {
+            ROS_ERROR("%s", log);
+        }
 
-            for (uint8_t index = 0; index < idCount; ++index) {
-                dynamixelState[index].present_current = current[index];
-                dynamixelState[index].present_velocity = velocity[index];
-                dynamixelState[index].present_position = position[index];
-                dynamixelStateList.dynamixel_state.push_back(dynamixelState[index]);
-            }
-        } else if (dynamixelWorkbench->getProtocolVersion() == 1.0f) {
-            uint16_t dataLength = controlItems["Present_Position"]->data_length + controlItems["Present_Velocity"]->data_length + controlItems["Present_Current"]->data_length;
-            uint32_t allData[dataLength];
-            uint8_t dynamixelCount = 0;
+        //for (uint8_t index = 0; index < idCount; ++index) {
+        //    jointState.effort.push_back(dynamixelWorkbench->convertValue2Current((int16_t) load[index])); // TODO: mA != N
+        //    jointState.velocity.push_back(dynamixelWorkbench->convertValue2Velocity(idList[index], velocity[index]));
+        //    jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(idList[index], position[index]));
+        //}
 
-            for (auto const &dxl:jointIds) {
-                if (!dynamixelWorkbench->readRegister((uint8_t) dxl.second, controlItems["Present_Position"]->address, dataLength, allData, &log)) {
-                    ROS_ERROR("%s", log);
-                }
-
-                dynamixelState[dynamixelCount].present_current = DXL_MAKEWORD(allData[4], allData[5]);
-                dynamixelState[dynamixelCount].present_velocity = DXL_MAKEWORD(allData[2], allData[3]);
-                dynamixelState[dynamixelCount].present_position = DXL_MAKEWORD(allData[0], allData[1]);
-
-                dynamixelStateList.dynamixel_state.push_back(dynamixelState[dynamixelCount]);
-                dynamixelCount++;
-            }
+        for(uint8_t index = 0; index < idCount; index++){
+            dynamixelState[index].present_current = (int16_t) load[index];
+            dynamixelState[index].present_velocity = velocity[index];
+            dynamixelState[index].present_position = position[index];
+            dynamixelStates.dynamixel_state.push_back(dynamixelState[index]);
         }
 #ifndef DEBUG
-    }
+    // }
 #endif
 
 #ifdef DEBUG
@@ -393,45 +315,25 @@ void DynamixelController::publishCallback(const ros::TimerEvent &) {
 #ifdef DEBUG
     static double priv_pub_secs =ros::Time::now().toSec();
 #endif
-    dynamixelStateListPublisher.publish(dynamixelStateList);
+    // TODO: Allow disabling
+    dynamixelStatePublisher.publish(dynamixelStates);
 
-    jointStateMessage.header.stamp = ros::Time::now();
-    jointStateMessage.name.clear();
-    jointStateMessage.position.clear();
-    jointStateMessage.velocity.clear();
-    jointStateMessage.effort.clear();
+    jointState.header.stamp = ros::Time::now();
+    jointState.name.clear();
+    jointState.position.clear();
+    jointState.velocity.clear();
+    jointState.effort.clear();
 
-    uint8_t id_cnt = 0;
-
-    for (auto const &dxl:jointIds) {
-        double position = 0.0;
-        double velocity = 0.0;
-        double effort = 0.0;
-
-        jointStateMessage.name.push_back(dxl.first);
-
-        if (dynamixelWorkbench->getProtocolVersion() == 2.0f) {
-            if (strcmp(dynamixelWorkbench->getModelName((uint8_t) dxl.second), "XL-320") == 0) {
-                effort = dynamixelWorkbench->convertValue2Load((int16_t) dynamixelStateList.dynamixel_state[id_cnt].present_current);
-            } else {
-                effort = dynamixelWorkbench->convertValue2Current((int16_t) dynamixelStateList.dynamixel_state[id_cnt].present_current);
-            }
-        } else if (dynamixelWorkbench->getProtocolVersion() == 1.0f) {
-            effort = dynamixelWorkbench->convertValue2Load((int16_t) dynamixelStateList.dynamixel_state[id_cnt].present_current);
-        }
-
-        velocity = dynamixelWorkbench->convertValue2Velocity((uint8_t) dxl.second, (int32_t) dynamixelStateList.dynamixel_state[id_cnt].present_velocity);
-        position = dynamixelWorkbench->convertValue2Radian((uint8_t) dxl.second, (int32_t) dynamixelStateList.dynamixel_state[id_cnt].present_position);
-
-        jointStateMessage.effort.push_back(effort);
-        jointStateMessage.velocity.push_back(velocity);
-        jointStateMessage.position.push_back(position);
-
-        id_cnt++;
+    uint8_t idCount = 0;
+    for (auto const& dxl:jointIds) {
+        jointState.name.push_back(dxl.first);
+        jointState.effort.push_back(dynamixelWorkbench->convertValue2Current((int16_t) dynamixelStates.dynamixel_state[idCount].present_current)); // TODO: mA != N
+        jointState.velocity.push_back(dynamixelWorkbench->convertValue2Velocity(dxl.second, dynamixelStates.dynamixel_state[idCount].present_velocity));
+        jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(dxl.second, dynamixelStates.dynamixel_state[idCount].present_position));
+        idCount++;
     }
 
-    jointStatePublisher.publish(jointStateMessage);
-
+    jointStatePublisher.publish(jointState);
 #ifdef DEBUG
     ROS_WARN("[publishCallback] diff_secs : %f", ros::Time::now().toSec() - priv_pub_secs);
     priv_pub_secs = ros::Time::now().toSec();
@@ -493,9 +395,11 @@ bool DynamixelController::dynamixelCommandMsgCallback(dynamixel_workbench_msgs::
     std::string itemName = req.addr_name;
     int32_t value = req.value;
 
+    ROS_DEBUG("Writing value[%d] on items[%s] to Dynamixel[ID: %d]", value, itemName.c_str(), id);
+
     if (!dynamixelWorkbench->itemWrite(id, itemName.c_str(), value, &log)) {
         ROS_ERROR("%s", log);
-        ROS_ERROR("Failed to write value[%d] on items[%s] to Dynamixel[ID : %d]", value, itemName.c_str(), id);
+        ROS_ERROR("Failed to write value[%d] on items[%s] to Dynamixel[ID: %d]", value, itemName.c_str(), id);
         res.comm_result = 0;
         return false;
     }

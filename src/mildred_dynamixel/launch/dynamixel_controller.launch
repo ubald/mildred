@@ -1,11 +1,11 @@
 <launch>
-    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find mypackage)/rosconsole.conf"/>
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find mildred_dynamixel)/config/rosconsole.conf"/>
 
     <arg name="usb_port" default="/dev/ttyACM0"/>
     <arg name="dxl_baud_rate" default="57600"/>
 
-    <node name="mildred_dynamixel" pkg="mildred_dynamixel" type="controller" required="true" output="screen" args="$(arg usb_port) $(arg dxl_baud_rate)">
-        <param name="joints_config_file" value="$(find mildred_dynamixel)/config/mildred.yaml"/>
+    <node name="mildred_dynamixel_controller" pkg="mildred_dynamixel" type="controller" required="true" output="screen" args="$(arg usb_port) $(arg dxl_baud_rate)">
+        <param name="joints_config_file" value="$(find mildred_dynamixel)/config/config.yaml"/>
         <rosparam>
             publish_period: 0.010
             dxl_read_period: 0.010

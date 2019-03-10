@@ -22,14 +22,9 @@
 #define SYNC_WRITE_HANDLER_FOR_GOAL_VELOCITY 1
 
 // SYNC_READ_HANDLER(Only for Protocol 2.0)
-#define SYNC_READ_HANDLER_FOR_PRESENT_POSITION_VELOCITY_CURRENT 0
+#define CURRENT_STATE_SYNC_READ_HANDLER 0
 
 // #define DEBUG
-
-//typedef struct {
-//    std::string field;
-//    uint32_t value;
-//} ControlTableValue;
 
 class DynamixelController {
 private:
@@ -40,10 +35,11 @@ private:
     // ROS Parameters
 
     // ROS Topic Publisher
-    ros::Publisher dynamixelStateListPublisher;
+    ros::Publisher dynamixelStatePublisher;
     ros::Publisher jointStatePublisher;
 
     // ROS Topic Subscriber
+    ros::Subscriber jointControlSubscriber;
 
     // ROS Service Server
     ros::ServiceServer dynamixelCommandService;
@@ -55,20 +51,21 @@ private:
     uint32_t baudRate;
     DynamixelWorkbench *dynamixelWorkbench;
 
-    std::unordered_map<std::string, uint8_t> jointIds{};
+    std::map<std::string, uint8_t> jointIds{};
     std::unordered_map<std::string, uint32_t> commonJointConfig{};
     std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> jointConfig{};
 
-    std::map<std::string, const ControlItem *> controlItems;
-    dynamixel_workbench_msgs::DynamixelStateList dynamixelStateList;
-    sensor_msgs::JointState jointStateMessage;
-    std::vector<WayPoint> presentGoal;
+    const ControlItem * goalPositionControl;
+    const ControlItem * currentPositionControl;
+    const ControlItem * currentVelocityControl;
+    const ControlItem * currentLoadControl;
+
+    dynamixel_workbench_msgs::DynamixelStateList dynamixelStates{};
+    sensor_msgs::JointState jointState{};
 
     double readPeriod;
     double writePeriod;
     double publishPeriod;
-
-    bool moving;
 
     bool initWorkbench();
     bool getDynamixelJointsInfo();
@@ -86,12 +83,8 @@ public:
 
     bool init();
 
-    bool getPresentPosition(std::vector<std::string> dynamixelNames);
-
     double getReadPeriod() { return readPeriod; }
-
     double getWritePeriod() { return writePeriod; }
-
     double getPublishPeriod() { return publishPeriod; }
 
     void readCallback(const ros::TimerEvent &);
