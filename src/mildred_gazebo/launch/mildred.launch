@@ -4,10 +4,11 @@
     <arg name="gui" default="true"/>
     <arg name="headless" default="false"/>
     <arg name="debug" default="false"/>
-    <arg name="model" default="$(find mildred_description)/urdf/mildred.urdf.xacro"/>
 
-    <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
+    <!-- Load robot model into paramater server -->
+    <include file="$(find mildred_description)/launch/load_model.launch"/>
 
+    <!-- Launch gazebo -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(find mildred_gazebo)/worlds/mildred.world"/>
         <arg name="paused" value="$(arg paused)"/>
@@ -17,10 +18,10 @@
         <arg name="debug" value="$(arg debug)" />
     </include>
 
-    <!--<rosparam command="load" file="$(find mildred_gazebo)/config/joint_publish.yaml" ns="mildred_joint_state_controller" />-->
-    <!--<rosparam command="load" file="$(find mildred_gazebo)/config/joint_control.yaml" ns="mildred_joint_controller" />-->
+    <!-- Load controller configuration -->
     <rosparam command="load" file="$(find mildred_gazebo)/config/mildred_control.yaml"/>
 
+    <!-- Load controllers -->
     <node name="mildred_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
           ns="/mildred"
           args="joint_state_controller
