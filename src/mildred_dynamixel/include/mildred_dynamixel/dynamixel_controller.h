@@ -1,18 +1,17 @@
 #pragma once
 
+#include <iostream>
 #include <unordered_map>
 
 #include <yaml-cpp/yaml.h>
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "sensor_msgs/msg/joint_state.h"
+#include "sensor_msgs/msg/joint_state.hpp"
+#include <mildred_dynamixel/msg/dynamixel_state_list.hpp>
+#include <mildred_dynamixel/srv/dynamixel_command.hpp>
 
 #include <dynamixel_workbench_toolbox/dynamixel_workbench.h>
-#include <dynamixel_workbench_msgs/DynamixelStateList.h>
-#include <dynamixel_workbench_msgs/DynamixelCommand.h>
-
-#include <dynamixel_workbench_controllers/trajectory_generator.h>
 
 // SYNC_WRITE_HANDLER
 #define SYNC_WRITE_HANDLER_FOR_GOAL_POSITION 0
@@ -23,46 +22,46 @@
 
 // #define DEBUG
 
-class DynamixelController {
+class DynamixelController : public rclcpp::Node {
 private:
     // ROS NodeHandle
-    rclcpp::NodeHandle nodeHandle;
-    rclcpp::NodeHandle privateNodeHandle;
 
     // ROS Parameters
 
     // ROS Topic Publisher
-    rclcpp::Publisher dynamixelStatePublisher;
-    rclcpp::Publisher jointStatePublisher;
+    std::shared_ptr<rclcpp::Publisher<mildred_dynamixel::msg::DynamixelStateList>> dynamixelStatePublisher;
+    std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::JointState>> jointStatePublisher;
 
     // ROS Topic Subscriber
-    rclcpp::Subscriber jointControlSubscriber;
 
     // ROS Service Server
-    rclcpp::ServiceServer dynamixelCommandService;
+    std::shared_ptr<rclcpp::Service<mildred_dynamixel::srv::DynamixelCommand>> dynamixelCommandService;
 
     // ROS Service Client
 
     // Dynamixel Workbench Parameters
     std::string portName;
     uint32_t baudRate;
-    DynamixelWorkbench *dynamixelWorkbench;
+    std::unique_ptr<DynamixelWorkbench> dynamixelWorkbench;
 
     std::map<std::string, uint8_t> jointIds{};
     std::unordered_map<std::string, uint32_t> commonJointConfig{};
     std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> jointConfig{};
 
-    const ControlItem * goalPositionControl;
-    const ControlItem * currentPositionControl;
-    const ControlItem * currentVelocityControl;
-    const ControlItem * currentLoadControl;
+    const ControlItem *goalPositionControl;
+    const ControlItem *currentPositionControl;
+    const ControlItem *currentVelocityControl;
+    const ControlItem *currentLoadControl;
 
-    dynamixel_workbench_msgs::DynamixelStateList dynamixelStates{};
-    sensor_msgs::JointState jointState{};
+    mildred_dynamixel::msg::DynamixelStateList dynamixelStates{};
+    sensor_msgs::msg::JointState jointState{};
 
     double readPeriod;
     double writePeriod;
     double publishPeriod;
+    std::shared_ptr<rclcpp::TimerBase> readTimer;
+    std::shared_ptr<rclcpp::TimerBase> writeTimer;
+    std::shared_ptr<rclcpp::TimerBase> publishTimer;
 
     bool initWorkbench();
     bool getDynamixelJointsInfo();
@@ -75,18 +74,18 @@ private:
     void initServices();
 
 public:
-    DynamixelController(std::string portName, uint32_t baudRate);
+    DynamixelController();
     ~DynamixelController();
 
     bool init();
 
-    double getReadPeriod() { return readPeriod; }
-    double getWritePeriod() { return writePeriod; }
-    double getPublishPeriod() { return publishPeriod; }
+    void readCallback();
+    void writeCallback();
+    void publishCallback();
 
-    void readCallback(const rclcpp::TimerEvent &);
-    void writeCallback(const rclcpp::TimerEvent &);
-    void publishCallback(const rclcpp::TimerEvent &);
-
-    bool dynamixelCommandMsgCallback(dynamixel_workbench_msgs::DynamixelCommand::Request &req, dynamixel_workbench_msgs::DynamixelCommand::Response &res);
+    void dynamixelCommandMsgCallback(
+        std::shared_ptr<rmw_request_id_t> request_header,
+        std::shared_ptr<mildred_dynamixel::srv::DynamixelCommand::Request> request,
+        std::shared_ptr<mildred_dynamixel::srv::DynamixelCommand::Response> response
+    );
 };

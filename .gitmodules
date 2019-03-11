@@ -1,0 +1,3 @@
+[submodule "src/mildred_dynamixel/lib/dynamixel_workbench"]
+	path = src/mildred_dynamixel/lib/dynamixel_workbench
+	url = https://github.com/ROBOTIS-GIT/dynamixel-workbench.git

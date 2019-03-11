@@ -1,46 +1,49 @@
 #include "mildred_dynamixel/dynamixel_controller.h"
 
-DynamixelController::DynamixelController(const std::string portName, const uint32_t baudRate)
-    : nodeHandle(""),
-      privateNodeHandle("~"),
-      portName(portName),
-      baudRate(baudRate) {
-    readPeriod = privateNodeHandle.param<double>("dxl_read_period", 0.010f);
-    writePeriod = privateNodeHandle.param<double>("dxl_write_period", 0.010f);
-    publishPeriod = privateNodeHandle.param<double>("publish_period", 0.010f);
-    dynamixelWorkbench = new DynamixelWorkbench();
+DynamixelController::DynamixelController()
+    : rclcpp::Node("dynamixel_controller") {
+    this->get_parameter<std::string>("port", portName);
+    this->get_parameter<uint32_t>("baudrate", baudRate);
+
+    std::cout << portName << '/' << baudRate << std::endl;
+
+    this->get_parameter_or<double>("dxl_read_period", readPeriod, 0.010f);
+    this->get_parameter_or<double>("dxl_write_period", writePeriod, 0.010f);
+    this->get_parameter_or<double>("publish_period", publishPeriod, 0.010f);
+
+    dynamixelWorkbench = std::make_unique<DynamixelWorkbench>();
 }
 
 DynamixelController::~DynamixelController() = default;
 
 bool DynamixelController::init() {
     if (!initWorkbench()) {
-        ROS_ERROR("Please check USB port name");
+        RCLCPP_ERROR(this->get_logger(), "Please check USB port name");
         return false;
     }
 
     if (!getDynamixelJointsInfo()) {
-        ROS_ERROR("Please check YAML file");
+        RCLCPP_ERROR(this->get_logger(), "Please check YAML file");
         return false;
     }
 
     if (!pingDynamixels()) {
-        ROS_ERROR("Please check Dynamixel ID or BaudRate");
+        RCLCPP_ERROR(this->get_logger(), "Please check Dynamixel ID or BaudRate");
         return false;
     }
 
     if (!initDynamixels()) {
-        ROS_ERROR("Please check control table (http://emanual.robotis.com/#control-table)");
+        RCLCPP_ERROR(this->get_logger(), "Please check control table (http://emanual.robotis.com/#control-table)");
         return false;
     }
 
     if (!initControlItems()) {
-        ROS_ERROR("Please check control items");
+        RCLCPP_ERROR(this->get_logger(), "Please check control items");
         return false;
     }
 
     if (!initSDKHandlers()) {
-        ROS_ERROR("Failed to set Dynamixel SDK Handler");
+        RCLCPP_ERROR(this->get_logger(), "Failed to set Dynamixel SDK Handler");
         return false;
     }
 
@@ -48,16 +51,23 @@ bool DynamixelController::init() {
     initSubscriber();
     initServices();
 
+
+    RCLCPP_INFO(this->get_logger(), "Creating timers");
+
+    //readTimer = this->create_wall_timer(std::chrono::duration<double>(readPeriod), std::bind(&DynamixelController::readCallback, this), nullptr);
+    //writeTimer = this->create_wall_timer(writePeriod, std::bind(&DynamixelController::writeCallback, this), nullptr);
+    //publishTimer = this->create_wall_timer(publishPeriod, std::bind(&DynamixelController::publishCallback, this), nullptr);
+
     return true;
 }
 
 bool DynamixelController::initWorkbench() {
-    ROS_DEBUG("Initializing workbench");
+    RCLCPP_DEBUG(this->get_logger(), "Initializing workbench");
 
     const char *log;
     if (!dynamixelWorkbench->init(portName.c_str(), baudRate, &log)) {
-        ROS_ERROR("%s", log);
-        ROS_ERROR("Please check USB port name");
+        RCLCPP_ERROR(this->get_logger(), "%s", log);
+        RCLCPP_ERROR(this->get_logger(), "Please check USB port name");
         return false;
     }
 
@@ -69,9 +79,10 @@ bool DynamixelController::initWorkbench() {
  * @return
  */
 bool DynamixelController::getDynamixelJointsInfo() {
-    std::string filePath = privateNodeHandle.param<std::string>("joints_config_file", "");
+    std::string filePath;
+    this->get_parameter_or<std::string>("joints_config_file", filePath, "");
 
-    ROS_DEBUG("Loading joints configuration [%s]", filePath.c_str());
+    RCLCPP_DEBUG(this->get_logger(), "Loading joints configuration [%s]", filePath.c_str());
 
     YAML::Node config = YAML::LoadFile(filePath);
     if (config == nullptr) {
@@ -91,7 +102,7 @@ bool DynamixelController::getDynamixelJointsInfo() {
             continue;
         }
 
-        ROS_DEBUG("%s:", name.c_str());
+        RCLCPP_DEBUG(this->get_logger(), "%s:", name.c_str());
 
         auto newJointConfig = jointConfig.emplace(std::make_pair(name, std::unordered_map<std::string, uint32_t>()));
 
@@ -99,7 +110,7 @@ bool DynamixelController::getDynamixelJointsInfo() {
             auto field = property.first.as<std::string>();
             auto value = property.second.as<uint32_t>();
 
-            ROS_DEBUG("    %s: %d", field.c_str(), value);
+            RCLCPP_DEBUG(this->get_logger(), "    %s: %d", field.c_str(), value);
 
             if (field == "ID") {
                 jointIds[name] = value;
@@ -117,18 +128,18 @@ bool DynamixelController::getDynamixelJointsInfo() {
  * Ping all dynamixel actuators found in the YAML configuration
  */
 bool DynamixelController::pingDynamixels() {
-    ROS_DEBUG("Pinging actuators");
+    RCLCPP_DEBUG(this->get_logger(), "Pinging actuators");
 
     const char *log;
 
     for (auto const &dxl:jointIds) {
         uint16_t modelNumber = 0;
         if (!dynamixelWorkbench->ping((uint8_t) dxl.second, &modelNumber, &log)) {
-            ROS_ERROR("%s", log);
-            ROS_ERROR("Can't find Dynamixel ID '%d'", dxl.second);
+            RCLCPP_ERROR(this->get_logger(), "%s", log);
+            RCLCPP_ERROR(this->get_logger(), "Can't find Dynamixel ID '%d'", dxl.second);
             return false;
         } else {
-            ROS_INFO("Name: %s, ID: %d, Model Number: %d", dxl.first.c_str(), dxl.second, modelNumber);
+            RCLCPP_INFO(this->get_logger(), "Name: %s, ID: %d, Model Number: %d", dxl.first.c_str(), dxl.second, modelNumber);
         }
     }
 
@@ -139,12 +150,12 @@ bool DynamixelController::pingDynamixels() {
  * Write the initial config from the YAML file to the dynamixel actuators
  */
 bool DynamixelController::initDynamixels() {
-    ROS_DEBUG("Initializing actuators");
+    RCLCPP_DEBUG(this->get_logger(), "Initializing actuators");
 
     const char *log;
 
     for (auto const &dxl:jointIds) {
-        ROS_DEBUG("Initializing Dynamixel[Name: %s, ID: %d]", dxl.first.c_str(), dxl.second);
+        RCLCPP_DEBUG(this->get_logger(), "Initializing Dynamixel[Name: %s, ID: %d]", dxl.first.c_str(), dxl.second);
 
         dynamixelWorkbench->torqueOff(dxl.second);
 
@@ -154,10 +165,10 @@ bool DynamixelController::initDynamixels() {
                 continue;
             }
 
-            ROS_DEBUG("Writing [%s=%d] to Dynamixel[Name: %s, ID: %d]", property.first.c_str(), property.second, dxl.first.c_str(), dxl.second);
+            RCLCPP_DEBUG(this->get_logger(), "Writing [%s=%d] to Dynamixel[Name: %s, ID: %d]", property.first.c_str(), property.second, dxl.first.c_str(), dxl.second);
             if (!dynamixelWorkbench->itemWrite(dxl.second, property.first.c_str(), property.second, &log)) {
-                ROS_ERROR("%s", log);
-                ROS_ERROR("Failed to write [%s=%d] to Dynamixel[Name: %s, ID: %d]", property.first.c_str(), property.second, dxl.first.c_str(), dxl.second);
+                RCLCPP_ERROR(this->get_logger(), "%s", log);
+                RCLCPP_ERROR(this->get_logger(), "Failed to write [%s=%d] to Dynamixel[Name: %s, ID: %d]", property.first.c_str(), property.second, dxl.first.c_str(), dxl.second);
                 return false;
             }
         }
@@ -168,10 +179,10 @@ bool DynamixelController::initDynamixels() {
                 continue;
             }
 
-            ROS_DEBUG("Setting [%s=%d] to Dynamixel[Name: %s, ID: %d]", property.first.c_str(), property.second, dxl.first.c_str(), dxl.second);
+            RCLCPP_DEBUG(this->get_logger(), "Setting [%s=%d] to Dynamixel[Name: %s, ID: %d]", property.first.c_str(), property.second, dxl.first.c_str(), dxl.second);
             if (!dynamixelWorkbench->itemWrite(dxl.second, property.first.c_str(), property.second, &log)) {
-                ROS_ERROR("%s", log);
-                ROS_ERROR("Failed to write [%s=%d] to Dynamixel[Name: %s, ID: %d]", property.first.c_str(), property.second, dxl.first.c_str(), dxl.second);
+                RCLCPP_ERROR(this->get_logger(), "%s", log);
+                RCLCPP_ERROR(this->get_logger(), "Failed to write [%s=%d] to Dynamixel[Name: %s, ID: %d]", property.first.c_str(), property.second, dxl.first.c_str(), dxl.second);
                 return false;
             }
         }
@@ -183,7 +194,7 @@ bool DynamixelController::initDynamixels() {
 }
 
 bool DynamixelController::initControlItems() {
-    ROS_DEBUG("Initializing control items");
+    RCLCPP_DEBUG(this->get_logger(), "Initializing control items");
 
     // Just get the first and assume all the same model
     auto it = jointIds.begin();
@@ -206,21 +217,21 @@ bool DynamixelController::initControlItems() {
 }
 
 bool DynamixelController::initSDKHandlers() {
-    ROS_DEBUG("Initializing SDK handlers");
+    RCLCPP_DEBUG(this->get_logger(), "Initializing SDK handlers");
 
     const char *log = nullptr;
 
     if (!dynamixelWorkbench->addSyncWriteHandler(goalPositionControl->address, goalPositionControl->data_length, &log)) {
-        ROS_ERROR("%s", log);
+        RCLCPP_ERROR(this->get_logger(), "%s", log);
         return false;
     } else {
-        ROS_INFO("%s", log);
+        RCLCPP_INFO(this->get_logger(), "%s", log);
     }
 
     uint16_t startAddress = std::min(currentPositionControl->address, currentLoadControl->address);
     uint16_t readLength = currentPositionControl->data_length + currentVelocityControl->data_length + currentLoadControl->data_length;
     if (!dynamixelWorkbench->addSyncReadHandler(startAddress, readLength, &log)) {
-        ROS_ERROR("%s", log);
+        RCLCPP_ERROR(this->get_logger(), "%s", log);
         return false;
     }
 
@@ -228,28 +239,30 @@ bool DynamixelController::initSDKHandlers() {
 }
 
 void DynamixelController::initPublisher() {
-    ROS_DEBUG("Initializing publishers");
-    dynamixelStatePublisher = nodeHandle.advertise<dynamixel_workbench_msgs::DynamixelStateList>("dynamixel_state", 100);
-    jointStatePublisher = nodeHandle.subscribe<sensor_msgs::JointState>("joint_states", 100);
+    RCLCPP_DEBUG(this->get_logger(), "Initializing publishers");
+    dynamixelStatePublisher = this->create_publisher<mildred_dynamixel::msg::DynamixelStateList>("dynamixel_state");
+    jointStatePublisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states");
 }
 
 void DynamixelController::initSubscriber() {
-    ROS_DEBUG("Initializing subscribers");
-    jointControlSubscriber = nodeHandle.advertise<sensor_msgs::JointState>("joint_states", 100);
+    RCLCPP_DEBUG(this->get_logger(), "Initializing subscribers");
+
 }
 
 void DynamixelController::initServices() {
-    ROS_DEBUG("Initializing services");
-    dynamixelCommandService = privateNodeHandle.advertiseService("dynamixel_command", &DynamixelController::dynamixelCommandMsgCallback, this);
+    RCLCPP_DEBUG(this->get_logger(), "Initializing services");
+    dynamixelCommandService = this->create_service<mildred_dynamixel::srv::DynamixelCommand>(
+        "dynamixel_command",
+        std::bind(&DynamixelController::dynamixelCommandMsgCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 }
 
-void DynamixelController::readCallback(const rclcpp::TimerEvent &) {
+void DynamixelController::readCallback() {
 #ifdef DEBUG
     static double priv_read_secs = rclcpp::Time::now().toSec();
 #endif
     const char *log = nullptr;
 
-    dynamixel_workbench_msgs::DynamixelState dynamixelState[jointIds.size()];
+    mildred_dynamixel::msg::DynamixelState dynamixelState[jointIds.size()];
     dynamixelStates.dynamixel_state.clear();
 
     int32_t load[jointIds.size()];
@@ -264,7 +277,7 @@ void DynamixelController::readCallback(const rclcpp::TimerEvent &) {
     //    idList[idCount++] = dxl.second;
     //}
 
-    for (auto const& dxl:jointIds){
+    for (auto const &dxl:jointIds) {
         dynamixelState[idCount].name = dxl.first;
         dynamixelState[idCount].id = dxl.second;
         idList[idCount++] = dxl.second;
@@ -273,76 +286,76 @@ void DynamixelController::readCallback(const rclcpp::TimerEvent &) {
 #ifndef DEBUG
     // if (!moving) {
 #endif
-        if (!dynamixelWorkbench->syncRead(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, &log)) {
-            ROS_ERROR("%s", log);
-        }
+    if (!dynamixelWorkbench->syncRead(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, &log)) {
+        RCLCPP_ERROR(this->get_logger(), "%s", log);
+    }
 
-        if (!dynamixelWorkbench->getSyncReadData(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, currentLoadControl->address, currentLoadControl->data_length, load, &log)) {
-            ROS_ERROR("%s", log);
-        }
+    if (!dynamixelWorkbench->getSyncReadData(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, currentLoadControl->address, currentLoadControl->data_length, load, &log)) {
+        RCLCPP_ERROR(this->get_logger(), "%s", log);
+    }
 
-        if (!dynamixelWorkbench->getSyncReadData(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, currentVelocityControl->address, currentVelocityControl->data_length, velocity, &log)) {
-            ROS_ERROR("%s", log);
-        }
+    if (!dynamixelWorkbench->getSyncReadData(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, currentVelocityControl->address, currentVelocityControl->data_length, velocity, &log)) {
+        RCLCPP_ERROR(this->get_logger(), "%s", log);
+    }
 
-        if (!dynamixelWorkbench->getSyncReadData(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, currentPositionControl->address, currentPositionControl->data_length, position, &log)) {
-            ROS_ERROR("%s", log);
-        }
+    if (!dynamixelWorkbench->getSyncReadData(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, currentPositionControl->address, currentPositionControl->data_length, position, &log)) {
+        RCLCPP_ERROR(this->get_logger(), "%s", log);
+    }
 
-        //for (uint8_t index = 0; index < idCount; ++index) {
-        //    jointState.effort.push_back(dynamixelWorkbench->convertValue2Current((int16_t) load[index])); // TODO: mA != N
-        //    jointState.velocity.push_back(dynamixelWorkbench->convertValue2Velocity(idList[index], velocity[index]));
-        //    jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(idList[index], position[index]));
-        //}
+    //for (uint8_t index = 0; index < idCount; ++index) {
+    //    jointState.effort.push_back(dynamixelWorkbench->convertValue2Current((int16_t) load[index])); // TODO: mA != N
+    //    jointState.velocity.push_back(dynamixelWorkbench->convertValue2Velocity(idList[index], velocity[index]));
+    //    jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(idList[index], position[index]));
+    //}
 
-        for(uint8_t index = 0; index < idCount; index++){
-            dynamixelState[index].present_current = (int16_t) load[index];
-            dynamixelState[index].present_velocity = velocity[index];
-            dynamixelState[index].present_position = position[index];
-            dynamixelStates.dynamixel_state.push_back(dynamixelState[index]);
-        }
+    for (uint8_t index = 0; index < idCount; index++) {
+        dynamixelState[index].current_position = position[index];
+        dynamixelState[index].current_velocity = velocity[index];
+        dynamixelState[index].current_load = (int16_t) load[index];
+        dynamixelStates.dynamixel_state.push_back(dynamixelState[index]);
+    }
 #ifndef DEBUG
     // }
 #endif
 
 #ifdef DEBUG
-    ROS_WARN("[readCallback] diff_secs : %f", rlcpp::Time::now().toSec() - priv_read_secs);
-    priv_read_secs = rlcpp::Time::now().toSec();
+    RCLCPP_WARN("[readCallback] diff_secs : %f", rclcpp::Time::now().toSec() - priv_read_secs);
+    priv_read_secs = rclcpp::Time::now().toSec();
 #endif
 }
 
-void DynamixelController::publishCallback(const rlcpp::TimerEvent &) {
+void DynamixelController::publishCallback() {
 #ifdef DEBUG
-    static double priv_pub_secs =rlcpp::Time::now().toSec();
+    static double priv_pub_secs =rclcpp::Time::now().toSec();
 #endif
     // TODO: Allow disabling
-    dynamixelStatePublisher.publish(dynamixelStates);
+    dynamixelStatePublisher->publish(dynamixelStates);
 
-    jointState.header.stamp = rlcpp::Time::now();
+    jointState.header.stamp = this->now();
     jointState.name.clear();
     jointState.position.clear();
     jointState.velocity.clear();
     jointState.effort.clear();
 
     uint8_t idCount = 0;
-    for (auto const& dxl:jointIds) {
+    for (auto const &dxl:jointIds) {
         jointState.name.push_back(dxl.first);
-        jointState.effort.push_back(dynamixelWorkbench->convertValue2Current((int16_t) dynamixelStates.dynamixel_state[idCount].present_current)); // TODO: mA != N
-        jointState.velocity.push_back(dynamixelWorkbench->convertValue2Velocity(dxl.second, dynamixelStates.dynamixel_state[idCount].present_velocity));
-        jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(dxl.second, dynamixelStates.dynamixel_state[idCount].present_position));
+        jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(dxl.second, dynamixelStates.dynamixel_state[idCount].current_position));
+        jointState.velocity.push_back(dynamixelWorkbench->convertValue2Velocity(dxl.second, dynamixelStates.dynamixel_state[idCount].current_velocity));
+        jointState.effort.push_back(dynamixelWorkbench->convertValue2Current((int16_t) dynamixelStates.dynamixel_state[idCount].current_load)); // TODO: mA != N
         idCount++;
     }
 
-    jointStatePublisher.publish(jointState);
+    jointStatePublisher->publish(jointState);
 #ifdef DEBUG
-    ROS_WARN("[publishCallback] diff_secs : %f", rlcpp::Time::now().toSec() - priv_pub_secs);
-    priv_pub_secs = rlcpp::Time::now().toSec();
+    RCLCPP_WARN("[publishCallback] diff_secs : %f", rclcpp::Time::now().toSec() - priv_pub_secs);
+    priv_pub_secs = rclcpp::Time::now().toSec();
 #endif
 }
 
-void DynamixelController::writeCallback(const rlcpp::TimerEvent &) {
+void DynamixelController::writeCallback() {
 #ifdef DEBUG
-    static double priv_pub_secs =rlcpp::Time::now().toSec();
+    static double priv_pub_secs =rclcpp::Time::now().toSec();
 #endif
     //const char *log = nullptr;
     //
@@ -365,7 +378,7 @@ void DynamixelController::writeCallback(const rlcpp::TimerEvent &) {
     //    }
     //
     //    if (!dynamixelWorkbench->syncWrite(SYNC_WRITE_HANDLER_FOR_GOAL_POSITION, idList, idCount, position, 1, &log)) {
-    //        ROS_ERROR("%s", log);
+    //        RCLCPP_ERROR("%s", log);
     //    }
     //
     //    positionCount++;
@@ -377,65 +390,53 @@ void DynamixelController::writeCallback(const rlcpp::TimerEvent &) {
     //            pointCount    = 0;
     //            positionCount = 0;
     //
-    //            ROS_INFO("Complete Execution");
+    //            RCLCPP_INFO("Complete Execution");
     //        }
     //    }
     //}
 
 #ifdef DEBUG
-    ROS_WARN("[writeCallback] diff_secs : %f", rlcpp::Time::now().toSec() - priv_pub_secs);
-    priv_pub_secs = rlcpp::Time::now().toSec();
+    RCLCPP_WARN("[writeCallback] diff_secs : %f", rclcpp::Time::now().toSec() - priv_pub_secs);
+    priv_pub_secs = rclcpp::Time::now().toSec();
 #endif
 }
 
-bool DynamixelController::dynamixelCommandMsgCallback(dynamixel_workbench_msgs::DynamixelCommand::Request &req, dynamixel_workbench_msgs::DynamixelCommand::Response &res) {
+void DynamixelController::dynamixelCommandMsgCallback(
+    const std::shared_ptr<rmw_request_id_t> /*request_header*/,
+    const std::shared_ptr<mildred_dynamixel::srv::DynamixelCommand::Request> request,
+    const std::shared_ptr<mildred_dynamixel::srv::DynamixelCommand::Response> response
+) {
     const char *log;
 
-    uint8_t id = req.id;
-    std::string itemName = req.addr_name;
-    int32_t value = req.value;
+    uint8_t id = request->id;
+    std::string itemName = request->addr_name;
+    int32_t value = request->value;
 
-    ROS_DEBUG("Writing value[%d] on items[%s] to Dynamixel[ID: %d]", value, itemName.c_str(), id);
+    RCLCPP_DEBUG(this->get_logger(), "Writing value[%d] on items[%s] to Dynamixel[ID: %d]", value, itemName.c_str(), id);
 
-    if (!dynamixelWorkbench->itemWrite(id, itemName.c_str(), value, &log)) {
-        ROS_ERROR("%s", log);
-        ROS_ERROR("Failed to write value[%d] on items[%s] to Dynamixel[ID: %d]", value, itemName.c_str(), id);
-        res.comm_result = 0;
-        return false;
+    if (dynamixelWorkbench->itemWrite(id, itemName.c_str(), value, &log)) {
+        response->comm_result = 1;
+    } else {
+        RCLCPP_ERROR(this->get_logger(), "%s", log);
+        RCLCPP_ERROR(this->get_logger(), "Failed to write value[%d] on items[%s] to Dynamixel[ID: %d]", value, itemName.c_str(), id);
+        response->comm_result = 0;
     }
 
-    res.comm_result = 1;
-    return true;
 }
 
 int main(int argc, char **argv) {
-    rlcpp::init(argc, argv, "mildred_dynamixel_controller");
-    rlcpp::NodeHandle nodeHandle{};
+    rclcpp::init(argc, argv);
 
-    if (argc < 2) {
-        ROS_ERROR("Please set '-port_name' and  '-baud_rate' arguments for connected Dynamixels");
-        return 0;
-    }
-
-    std::string portName = argv[1]; // "/dev/ttyUSB0"
-    uint32_t baudRate = atoi(argv[2]); // 57600
-
-    DynamixelController dynamixelController{portName, baudRate};
-
-    if (!dynamixelController.init()) {
-        ROS_WARN("Failed to init, quitting");
+    auto node = std::make_shared<DynamixelController>();
+    if (!node->init()) {
+        std::cerr << "Failed to init, quitting" << std::endl;
         return 1;
     }
 
-    ROS_INFO("Creating timers");
+    rclcpp::spin(node);
+    rclcpp::shutdown();
 
-    rlcpp::Timer readTimer = nodeHandle.createTimer(rlcpp::Duration(dynamixelController.getReadPeriod()), &DynamixelController::readCallback, &dynamixelController);
-    rlcpp::Timer writeTimer = nodeHandle.createTimer(rlcpp::Duration(dynamixelController.getWritePeriod()), &DynamixelController::writeCallback, &dynamixelController);
-    rlcpp::Timer publishTimer = nodeHandle.createTimer(rlcpp::Duration(dynamixelController.getPublishPeriod()), &DynamixelController::publishCallback, &dynamixelController);
-
-    ROS_INFO("Ready!");
-
-    rlcpp::spin();
+    node = nullptr;
 
     return 0;
 }
