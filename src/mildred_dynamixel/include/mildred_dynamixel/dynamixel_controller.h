@@ -40,7 +40,7 @@ private:
     // ROS Service Client
 
     // Dynamixel Workbench Parameters
-    std::string portName;
+    std::string port;
     uint32_t baudRate;
     std::unique_ptr<DynamixelWorkbench> dynamixelWorkbench;
 
@@ -56,9 +56,9 @@ private:
     mildred_dynamixel::msg::DynamixelStateList dynamixelStates{};
     sensor_msgs::msg::JointState jointState{};
 
-    double readPeriod;
-    double writePeriod;
-    double publishPeriod;
+    uint8_t readFrequency;
+    uint8_t writeFrequency;
+    uint8_t publishFrequency;
     std::shared_ptr<rclcpp::TimerBase> readTimer;
     std::shared_ptr<rclcpp::TimerBase> writeTimer;
     std::shared_ptr<rclcpp::TimerBase> publishTimer;

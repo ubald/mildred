@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
-#project(mildred)
 
-#add_subdirectory(src/mildred_core mildred_core EXCLUDE_FROM_ALL)
-#add_subdirectory(src/mildred_dynamixel mildred_dynamixel EXCLUDE_FROM_ALL)
+# This is only for CLion, do not use for build
 
 macro(subdirlist result curdir)
     file(GLOB children RELATIVE ${curdir} ${curdir}/*)
@@ -19,6 +17,5 @@ endmacro()
 
 subdirlist(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
 foreach (subdir ${SUBDIRS})
-    message(${subdir})
     add_subdirectory(src/${subdir} ${subdir})
 endforeach ()

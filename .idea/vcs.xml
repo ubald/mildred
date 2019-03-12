@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build-clion/mildred_dynamixel/dynamixel_sdk/src/DynamixelSDK" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/mildred_dynamixel/lib/dynamixel_workbench" vcs="Git" />
   </component>
 </project>

@@ -2,14 +2,12 @@
 
 DynamixelController::DynamixelController()
     : rclcpp::Node("dynamixel_controller") {
-    this->get_parameter<std::string>("port", portName);
-    this->get_parameter<uint32_t>("baudrate", baudRate);
 
-    std::cout << portName << '/' << baudRate << std::endl;
-
-    this->get_parameter_or<double>("dxl_read_period", readPeriod, 0.010f);
-    this->get_parameter_or<double>("dxl_write_period", writePeriod, 0.010f);
-    this->get_parameter_or<double>("publish_period", publishPeriod, 0.010f);
+    this->get_parameter_or<std::string>("port", port, "/dev/ttyUSB0");
+    this->get_parameter_or<uint32_t>("baudrate", baudRate, 57600);
+    this->get_parameter_or<uint8_t>("dxl_read_frequency", readFrequency, 30);
+    this->get_parameter_or<uint8_t>("dxl_write_frequency", writeFrequency, 30);
+    this->get_parameter_or<uint8_t>("publish_frequency", publishFrequency, 30);
 
     dynamixelWorkbench = std::make_unique<DynamixelWorkbench>();
 }
@@ -51,21 +49,24 @@ bool DynamixelController::init() {
     initSubscriber();
     initServices();
 
-
     RCLCPP_INFO(this->get_logger(), "Creating timers");
+    RCLCPP_INFO(this->get_logger(), "Dynamixel read: %dHz", readFrequency);
+    RCLCPP_INFO(this->get_logger(), "Dynamixel write: %dHz", writeFrequency);
+    RCLCPP_INFO(this->get_logger(), "Publish: %dHz", publishFrequency);
 
-    //readTimer = this->create_wall_timer(std::chrono::duration<double>(readPeriod), std::bind(&DynamixelController::readCallback, this), nullptr);
-    //writeTimer = this->create_wall_timer(writePeriod, std::bind(&DynamixelController::writeCallback, this), nullptr);
-    //publishTimer = this->create_wall_timer(publishPeriod, std::bind(&DynamixelController::publishCallback, this), nullptr);
+    readTimer = this->create_wall_timer(std::chrono::milliseconds((uint64_t) ((1.0f / (uint64_t) readFrequency) * 1000)), std::bind(&DynamixelController::readCallback, this));
+    writeTimer = this->create_wall_timer(std::chrono::milliseconds((uint64_t) ((1.0f / (uint64_t) writeFrequency) * 1000)), std::bind(&DynamixelController::writeCallback, this));
+    publishTimer = this->create_wall_timer(std::chrono::milliseconds((uint64_t) ((1.0f / (uint64_t) publishFrequency) * 1000)), std::bind(&DynamixelController::publishCallback, this));
 
     return true;
 }
 
 bool DynamixelController::initWorkbench() {
     RCLCPP_DEBUG(this->get_logger(), "Initializing workbench");
+    RCLCPP_INFO(this->get_logger(), "Port: %s Baudrate: %d", port.c_str(), baudRate);
 
     const char *log;
-    if (!dynamixelWorkbench->init(portName.c_str(), baudRate, &log)) {
+    if (!dynamixelWorkbench->init(port.c_str(), baudRate, &log)) {
         RCLCPP_ERROR(this->get_logger(), "%s", log);
         RCLCPP_ERROR(this->get_logger(), "Please check USB port name");
         return false;
@@ -257,6 +258,7 @@ void DynamixelController::initServices() {
 }
 
 void DynamixelController::readCallback() {
+    std::cout << "Reading" << std::endl;
 #ifdef DEBUG
     static double priv_read_secs = rclcpp::Time::now().toSec();
 #endif
@@ -325,6 +327,7 @@ void DynamixelController::readCallback() {
 }
 
 void DynamixelController::publishCallback() {
+    std::cout << "Publishing" << std::endl;
 #ifdef DEBUG
     static double priv_pub_secs =rclcpp::Time::now().toSec();
 #endif
@@ -354,6 +357,7 @@ void DynamixelController::publishCallback() {
 }
 
 void DynamixelController::writeCallback() {
+    std::cout << "Writing" << std::endl;
 #ifdef DEBUG
     static double priv_pub_secs =rclcpp::Time::now().toSec();
 #endif
@@ -434,9 +438,6 @@ int main(int argc, char **argv) {
     }
 
     rclcpp::spin(node);
-    rclcpp::shutdown();
-
-    node = nullptr;
 
     return 0;
 }

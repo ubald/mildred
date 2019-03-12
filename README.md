@@ -3,27 +3,32 @@ A ROS Based Hexapod
 
 # Getting Started
 
-## Extra Dependencies (Other than ROS complete)
+## Install ROS2
+https://index.ros.org/doc/ros2/Installation/Linux-Install-Debians/
+
+## Install Extra Dependencies (Other than ROS complete)
 
     sudo apt install sudo apt install \
-    ros-melodic-moveit \
-    ros-melodic-rosserial-arduino \
-    ros-melodic-joy ros-melodic-joystick-drivers \  
-    ros-melodic-dynamixel-sdk ros-melodic-dynamixel-workbench \
     liburdfdom-tools
-
-###### Using Bash
-
-    source devel/setup.bash
     
-###### Using Zsh
+## Build
 
-    source devel/setup.zsh
+    colcon build --symlink-install --base-paths src
     
+## Source the Workspace
+
 ###### Using Fish
 You must have [bass](https://github.com/edc/bass) installed.
 
-    bass source devel/setup.bash
+    bass source install/setup.bash
+    
+###### Using Zsh
+
+    source install/setup.zsh
+    
+###### Using Bash
+
+    source install/setup.bash
 
 ## OpenCM9.04 Arduino Setup
 Additional Boards Manager URL:
@@ -44,6 +49,10 @@ http://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_workbench
 https://developer.leapmotion.com/sdk/v2
 
 ## Running
+
+    TBD
+
+## Running (ROS1)
 
 #### Terminal 1
 

@@ -22,7 +22,9 @@ def generate_launch_description():
             node_name='mildred_dynamixel_controller',
             parameters=[
                 {
-                    'joints_config_file': os.path.join(get_package_share_directory('mildred_dynamixel'), 'config', 'config.yaml')
+                    'port': launch.substitutions.LaunchConfiguration('port'),
+                    'baudrate': launch.substitutions.LaunchConfiguration('baudrate'),
+                    'joints_config_file': os.path.join(get_package_share_directory('mildred_dynamixel'), 'config', 'config.yaml'),
                 }
             ])
     ])
