@@ -18,8 +18,8 @@ def generate_launch_description():
             default_value=['1000000'],
             description='Baud Rate'),
         launch_ros.actions.Node(
-            package='mildred_dynamixel', node_executable='dynamixel_controller',
-            node_name='mildred_dynamixel_controller',
+            package='rviz', node_executable='rviz',
+            node_name='rviz',
             parameters=[
                 {
                     'port': launch.substitutions.LaunchConfiguration('port'),

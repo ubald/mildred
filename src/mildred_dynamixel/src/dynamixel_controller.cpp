@@ -5,9 +5,9 @@ DynamixelController::DynamixelController()
 
     this->get_parameter_or<std::string>("port", port, "/dev/ttyUSB0");
     this->get_parameter_or<uint32_t>("baudrate", baudRate, 57600);
-    this->get_parameter_or<uint8_t>("dxl_read_frequency", readFrequency, 30);
-    this->get_parameter_or<uint8_t>("dxl_write_frequency", writeFrequency, 30);
-    this->get_parameter_or<uint8_t>("publish_frequency", publishFrequency, 30);
+    this->get_parameter_or<uint8_t>("dxl_read_frequency", readFrequency, 60);
+    this->get_parameter_or<uint8_t>("dxl_write_frequency", writeFrequency, 60);
+    this->get_parameter_or<uint8_t>("publish_frequency", publishFrequency, 60);
 
     dynamixelWorkbench = std::make_unique<DynamixelWorkbench>();
 }

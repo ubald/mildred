@@ -1,43 +1,41 @@
 #include <DynamixelSDK.h>
-#include <stdarg.h>
-
-#define DXL_USB_VER 20170915
 
 #define CMD_PORT              SerialUSB      // USB
 #define DXL_PORT              Serial1
-#define DXL_BAUD              57600
+#define DXL_BAUD              1000000
+//#define DXL_BAUD              57600
 
-#define DXL_TX_BUFFER_LENGTH  64
+#define DXL_TX_BUFFER_LENGTH  1024
 
 uint8_t tx_buffer[DXL_TX_BUFFER_LENGTH];
 
-long previousMillis = 0; // will store the last time the LED was updated
-int interval = 1000;  // interval at which to blink (in milliseconds)
+//long previousMillis = 0; // will store the last time the LED was updated
+//int interval = 1000;  // interval at which to blink (in milliseconds)
 
 void setup() {
     pinMode(BOARD_LED_PIN, OUTPUT);
 
-    CMD_PORT.begin(57600);
+    //CMD_PORT.begin(115200);
+    CMD_PORT.begin(1000000);
     DXL_PORT.setDxlMode(true);
     DXL_PORT.begin(DXL_BAUD);
 
     drv_dxl_begin(0);
     drv_dxl_tx_enable(0, FALSE);
-
-    //while(!Serial);
 }
 
 void loop() {
     update_dxl();
 
+    //if (CMD_PORT.getBaudRate() != DXL_PORT.getBaudRate()) {
+    //    DXL_PORT.flush();
+    //    DXL_PORT.begin(CMD_PORT.getBaudRate());
+    //}
+
     //if ((int)millis() - previousMillis > interval) {
     //    previousMillis = millis();
     //    toggleLED();
     //}
-
-//    if (CMD_PORT.getBaudRate() != DXL_PORT.getBaudRate()) {
-//        DXL_PORT.begin(CMD_PORT.getBaudRate());
-//    }
 }
 
 

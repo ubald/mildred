@@ -3,7 +3,10 @@ common:
   Return_Delay_Time: 0
   Drive_Mode: 0
   Operating_Mode: 3
+  Acceleration_Limit: 0
   Velocity_Limit: 0
+  Profile_Velocity: 0
+  Profile_Acceleration: 0
 joints:
   TC_joint_0:
     ID: 1

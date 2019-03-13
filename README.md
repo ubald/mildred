@@ -4,17 +4,32 @@ A ROS Based Hexapod
 # Getting Started
 
 ## Install ROS2
-https://index.ros.org/doc/ros2/Installation/Linux-Install-Debians/
+See: https://index.ros.org/doc/ros2/Installation/Linux-Install-Debians/
 
-## Install Extra Dependencies (Other than ROS complete)
+### Install Extra Dependencies
 
     sudo apt install sudo apt install \
     liburdfdom-tools
-    
+
+### Build rviz from source
+See: https://github.com/ros2/rviz
+
+## OpenCM9.04 Arduino Setup
+Additional Boards Manager URL:
+
+    https://raw.githubusercontent.com/ROBOTIS-GIT/OpenCM9.04/master/arduino/opencm_release/package_opencm9.04_index.json
+
+**Linux**: Allow uploading to the board without root permissions:
+
+    wget https://raw.githubusercontent.com/ROBOTIS-GIT/OpenCM9.04/master/99-opencm-cdc.rules
+    sudo mv ./99-opencm-cdc.rules /etc/udev/rules.d/
+    sudo udevadm control --reload-rules
+    sudo udevadm trigger
+
 ## Build
 
     colcon build --symlink-install --base-paths src
-    
+
 ## Source the Workspace
 
 ###### Using Fish
@@ -30,18 +45,8 @@ You must have [bass](https://github.com/edc/bass) installed.
 
     source install/setup.bash
 
-## OpenCM9.04 Arduino Setup
-Additional Boards Manager URL:
+# Other References
 
-    https://raw.githubusercontent.com/ROBOTIS-GIT/OpenCM9.04/master/arduino/opencm_release/package_opencm9.04_index.json
-
-**Linux**: Allow uploading to the board without root permissions:
-
-    wget https://raw.githubusercontent.com/ROBOTIS-GIT/OpenCM9.04/master/99-opencm-cdc.rules
-    sudo mv ./99-opencm-cdc.rules /etc/udev/rules.d/
-    sudo udevadm control --reload-rules
-    sudo udevadm trigger
-    
 ## Dynamixel Workbench
 http://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_workbench
 
