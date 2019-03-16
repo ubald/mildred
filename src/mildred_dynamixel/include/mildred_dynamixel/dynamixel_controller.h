@@ -47,9 +47,9 @@ private:
     // ROS Service Client
 
     // Dynamixel Workbench Parameters
-    std::string portName;
+    std::string port;
     uint32_t baudRate;
-    DynamixelWorkbench *dynamixelWorkbench;
+    std::unique_ptr<DynamixelWorkbench> dynamixelWorkbench;
 
     std::map<std::string, uint8_t> jointIds{};
     std::unordered_map<std::string, uint32_t> commonJointConfig{};
@@ -63,9 +63,12 @@ private:
     dynamixel_workbench_msgs::DynamixelStateList dynamixelStates{};
     sensor_msgs::JointState jointState{};
 
-    double readPeriod;
-    double writePeriod;
-    double publishPeriod;
+    uint8_t readFrequency;
+    uint8_t writeFrequency;
+    uint8_t publishFrequency;
+    std::unique_ptr<ros::Timer> readTimer;
+    std::unique_ptr<ros::Timer> writeTimer;
+    std::unique_ptr<ros::Timer> publishTimer;
 
     bool initWorkbench();
     bool getDynamixelJointsInfo();
@@ -78,14 +81,14 @@ private:
     void initServices();
 
 public:
-    DynamixelController(std::string portName, uint32_t baudRate);
+    DynamixelController(std::string port, uint32_t baudRate);
     ~DynamixelController();
 
     bool init();
 
-    double getReadPeriod() { return readPeriod; }
-    double getWritePeriod() { return writePeriod; }
-    double getPublishPeriod() { return publishPeriod; }
+    uint8_t getReadFrequency() { return readFrequency; }
+    uint8_t getWriteFrequency() { return writeFrequency; }
+    uint8_t getPublishFrequency() { return publishFrequency; }
 
     void readCallback(const ros::TimerEvent &);
     void writeCallback(const ros::TimerEvent &);

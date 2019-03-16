@@ -3,27 +3,13 @@ A ROS Based Hexapod
 
 # Getting Started
 
-## Extra Dependencies (Other than ROS complete)
+### Install Extra Dependencies
 
     sudo apt install sudo apt install \
-    ros-melodic-moveit \
-    ros-melodic-rosserial-arduino \
     ros-melodic-joy ros-melodic-joystick-drivers \  
     ros-melodic-dynamixel-sdk ros-melodic-dynamixel-workbench \
-    liburdfdom-tools
-
-###### Using Bash
-
-    source devel/setup.bash
-    
-###### Using Zsh
-
-    source devel/setup.zsh
-    
-###### Using Fish
-You must have [bass](https://github.com/edc/bass) installed.
-
-    bass source devel/setup.bash
+    libyaml-cpp-dev \
+    liburdfdom-tools 
 
 ## OpenCM9.04 Arduino Setup
 Additional Boards Manager URL:
@@ -37,6 +23,23 @@ Additional Boards Manager URL:
     sudo udevadm control --reload-rules
     sudo udevadm trigger
     
+## Source the Workspace
+
+###### Using Fish
+You must have [bass](https://github.com/edc/bass) installed.
+
+    bass source install/setup.bash
+    
+###### Using Zsh
+
+    source install/setup.zsh
+    
+###### Using Bash
+
+    source install/setup.bash
+
+# Other References
+
 ## Dynamixel Workbench
 http://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_workbench
 

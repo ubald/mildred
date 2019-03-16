@@ -1,14 +1,15 @@
 #include "mildred_dynamixel/dynamixel_controller.h"
 
-DynamixelController::DynamixelController(const std::string portName, const uint32_t baudRate)
+DynamixelController::DynamixelController(const std::string port, const uint32_t baudRate)
     : nodeHandle(""),
       privateNodeHandle("~"),
-      portName(portName),
+      port(port),
       baudRate(baudRate) {
-    readPeriod = privateNodeHandle.param<double>("dxl_read_period", 0.010f);
-    writePeriod = privateNodeHandle.param<double>("dxl_write_period", 0.010f);
-    publishPeriod = privateNodeHandle.param<double>("publish_period", 0.010f);
-    dynamixelWorkbench = new DynamixelWorkbench();
+    readFrequency = privateNodeHandle.param<uint8_t>("read_frequency", 60);
+    writeFrequency = privateNodeHandle.param<uint8_t>("write_frequency", 60);
+    publishFrequency = privateNodeHandle.param<uint8_t>("publish_frequency", 60);
+
+    dynamixelWorkbench = std::make_unique<DynamixelWorkbench>();
 }
 
 DynamixelController::~DynamixelController() = default;
@@ -53,9 +54,10 @@ bool DynamixelController::init() {
 
 bool DynamixelController::initWorkbench() {
     ROS_DEBUG("Initializing workbench");
+    ROS_DEBUG("Port: %s Baudrate: %d", port.c_str(), baudRate);
 
     const char *log;
-    if (!dynamixelWorkbench->init(portName.c_str(), baudRate, &log)) {
+    if (!dynamixelWorkbench->init(port.c_str(), baudRate, &log)) {
         ROS_ERROR("%s", log);
         ROS_ERROR("Please check USB port name");
         return false;
@@ -230,12 +232,12 @@ bool DynamixelController::initSDKHandlers() {
 void DynamixelController::initPublisher() {
     ROS_DEBUG("Initializing publishers");
     dynamixelStatePublisher = nodeHandle.advertise<dynamixel_workbench_msgs::DynamixelStateList>("dynamixel_state", 100);
-    jointStatePublisher = nodeHandle.subscribe<sensor_msgs::JointState>("joint_states", 100);
+    jointStatePublisher = nodeHandle.advertise<sensor_msgs::JointState>("joint_states", 100);
 }
 
 void DynamixelController::initSubscriber() {
     ROS_DEBUG("Initializing subscribers");
-    jointControlSubscriber = nodeHandle.advertise<sensor_msgs::JointState>("joint_states", 100);
+    //jointControlSubscriber = nodeHandle.subscribe<sensor_msgs::JointState>("joint_states", 100);
 }
 
 void DynamixelController::initServices() {
@@ -295,12 +297,12 @@ void DynamixelController::readCallback(const ros::TimerEvent &) {
         //    jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(idList[index], position[index]));
         //}
 
-        for(uint8_t index = 0; index < idCount; index++){
-            dynamixelState[index].present_current = (int16_t) load[index];
-            dynamixelState[index].present_velocity = velocity[index];
-            dynamixelState[index].present_position = position[index];
-            dynamixelStates.dynamixel_state.push_back(dynamixelState[index]);
-        }
+    for (uint8_t index = 0; index < idCount; index++) {
+        dynamixelState[index].present_position = position[index];
+        dynamixelState[index].present_velocity = velocity[index];
+        dynamixelState[index].present_current = (int16_t) load[index];
+        dynamixelStates.dynamixel_state.push_back(dynamixelState[index]);
+    }
 #ifndef DEBUG
     // }
 #endif
@@ -327,9 +329,9 @@ void DynamixelController::publishCallback(const ros::TimerEvent &) {
     uint8_t idCount = 0;
     for (auto const& dxl:jointIds) {
         jointState.name.push_back(dxl.first);
-        jointState.effort.push_back(dynamixelWorkbench->convertValue2Current((int16_t) dynamixelStates.dynamixel_state[idCount].present_current)); // TODO: mA != N
-        jointState.velocity.push_back(dynamixelWorkbench->convertValue2Velocity(dxl.second, dynamixelStates.dynamixel_state[idCount].present_velocity));
         jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(dxl.second, dynamixelStates.dynamixel_state[idCount].present_position));
+        jointState.velocity.push_back(dynamixelWorkbench->convertValue2Velocity(dxl.second, dynamixelStates.dynamixel_state[idCount].present_velocity));
+        jointState.effort.push_back(dynamixelWorkbench->convertValue2Current((int16_t) dynamixelStates.dynamixel_state[idCount].present_current)); // TODO: mA != N
         idCount++;
     }
 
@@ -397,15 +399,15 @@ bool DynamixelController::dynamixelCommandMsgCallback(dynamixel_workbench_msgs::
 
     ROS_DEBUG("Writing value[%d] on items[%s] to Dynamixel[ID: %d]", value, itemName.c_str(), id);
 
-    if (!dynamixelWorkbench->itemWrite(id, itemName.c_str(), value, &log)) {
+    if (dynamixelWorkbench->itemWrite(id, itemName.c_str(), value, &log)) {
+        res.comm_result = 1;
+        return true;
+    } else {
         ROS_ERROR("%s", log);
         ROS_ERROR("Failed to write value[%d] on items[%s] to Dynamixel[ID: %d]", value, itemName.c_str(), id);
         res.comm_result = 0;
         return false;
     }
-
-    res.comm_result = 1;
-    return true;
 }
 
 int main(int argc, char **argv) {
@@ -413,14 +415,14 @@ int main(int argc, char **argv) {
     ros::NodeHandle nodeHandle{};
 
     if (argc < 2) {
-        ROS_ERROR("Please set '-port_name' and  '-baud_rate' arguments for connected Dynamixels");
+        ROS_ERROR("Please set port' and baudRate arguments for connected Dynamixels");
         return 0;
     }
 
-    std::string portName = argv[1]; // "/dev/ttyUSB0"
+    std::string port = argv[1]; // "/dev/ttyUSB0"
     uint32_t baudRate = atoi(argv[2]); // 57600
 
-    DynamixelController dynamixelController{portName, baudRate};
+    DynamixelController dynamixelController{port, baudRate};
 
     if (!dynamixelController.init()) {
         ROS_WARN("Failed to init, quitting");
@@ -429,9 +431,9 @@ int main(int argc, char **argv) {
 
     ROS_INFO("Creating timers");
 
-    ros::Timer readTimer = nodeHandle.createTimer(ros::Duration(dynamixelController.getReadPeriod()), &DynamixelController::readCallback, &dynamixelController);
-    ros::Timer writeTimer = nodeHandle.createTimer(ros::Duration(dynamixelController.getWritePeriod()), &DynamixelController::writeCallback, &dynamixelController);
-    ros::Timer publishTimer = nodeHandle.createTimer(ros::Duration(dynamixelController.getPublishPeriod()), &DynamixelController::publishCallback, &dynamixelController);
+    ros::Timer readTimer = nodeHandle.createTimer(ros::Duration(1.0f / (double) dynamixelController.getReadFrequency()), &DynamixelController::readCallback, &dynamixelController);
+    ros::Timer writeTimer = nodeHandle.createTimer(ros::Duration(1.0f / (double) dynamixelController.getWriteFrequency()), &DynamixelController::writeCallback, &dynamixelController);
+    ros::Timer publishTimer = nodeHandle.createTimer(ros::Duration(1.0f / (double) dynamixelController.getPublishFrequency()), &DynamixelController::publishCallback, &dynamixelController);
 
     ROS_INFO("Ready!");
 
