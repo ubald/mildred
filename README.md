@@ -11,6 +11,16 @@ See: https://index.ros.org/doc/ros2/Installation/Linux-Install-Debians/
     sudo apt install sudo apt install \
     liburdfdom-tools
 
+## Extra Dependencies (Mac OS)
+    
+    brew install yaml-cpp
+
+### Mac Setup
+
+    # This might be required for building
+    set -gx LDFLAGS "-L/usr/local/opt/tinyxml2@6.2.0/lib"
+    set -gx CPPFLAGS "-I/usr/local/opt/tinyxml2@6.2.0/include"
+
 ### Build rviz from source
 See: https://github.com/ros2/rviz
 

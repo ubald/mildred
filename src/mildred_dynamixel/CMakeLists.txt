@@ -13,33 +13,47 @@ if (NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 14)
 endif ()
 
-#if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-#    add_compile_options(-Wall -Wextra -Wpedantic)
-#endif ()
+if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif ()
 
 # Dynamixel SDK
-set(DYNAMIXEL_SDK_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/dynamixel_sdk/src/DynamixelSDK/c++/include)
-set(DYNAMIXEL_SDK_LIBRARY_DIRS ${CMAKE_CURRENT_BINARY_DIR}/dynamixel_sdk/src/DynamixelSDK/c++/build/linux64/)
-set(DYNAMIXEL_SDK_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/dynamixel_sdk/src/DynamixelSDK/c++/build/linux64/libdxl_x64_cpp.so)
-externalproject_add(DynamixelSDK
-    GIT_REPOSITORY https://github.com/ROBOTIS-GIT/DynamixelSDK.git
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/dynamixel_sdk
-    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/dynamixel_sdk/src/DynamixelSDK/c++/build/linux64
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND make
-    INSTALL_COMMAND ""
-    BUILD_BYPRODUCTS ${DYNAMIXEL_SDK_LIBRARIES}
-    LOG_DOWNLOAD 1
-    LOG_BUILD 1
-    )
+set(DYNAMIXEL_SDK_SUBMODULE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/dynamixel_sdk)
+set(DYNAMIXEL_SDK_INCLUDE_DIRS ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/include)
+if (UNIX AND NOT APPLE)
+    set(DYNAMIXEL_SDK_SOURCES
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/packet_handler.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/protocol1_packet_handler.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/protocol2_packet_handler.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/group_sync_read.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/group_sync_write.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/group_bulk_read.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/group_bulk_write.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/port_handler.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/port_handler_linux.cpp
+        )
+elseif(UNIX AND APPLE)
+    set(DYNAMIXEL_SDK_SOURCES
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/packet_handler.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/protocol1_packet_handler.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/protocol2_packet_handler.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/group_sync_read.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/group_sync_write.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/group_bulk_read.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/group_bulk_write.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/port_handler.cpp
+        ${DYNAMIXEL_SDK_SUBMODULE_DIR}/c++/src/dynamixel_sdk/port_handler_mac.cpp
+        )
+endif()
 
 ## Dynamixel Workbench
-set(DYNAMIXEL_WORKBENCH_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/lib/dynamixel_workbench/dynamixel_workbench_toolbox/include)
+set(DYNAMIXEL_WORKBENCH_SUBMODULE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/dynamixel_workbench)
+set(DYNAMIXEL_WORKBENCH_INCLUDE_DIRS ${DYNAMIXEL_WORKBENCH_SUBMODULE_DIR}/dynamixel_workbench_toolbox/include)
 set(DYNAMIXEL_WORKBENCH_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/dynamixel_workbench/dynamixel_workbench_toolbox/src/dynamixel_workbench_toolbox/dynamixel_item.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/dynamixel_workbench/dynamixel_workbench_toolbox/src/dynamixel_workbench_toolbox/dynamixel_driver.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/dynamixel_workbench/dynamixel_workbench_toolbox/src/dynamixel_workbench_toolbox/dynamixel_tool.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/dynamixel_workbench/dynamixel_workbench_toolbox/src/dynamixel_workbench_toolbox/dynamixel_workbench.cpp
+    ${DYNAMIXEL_WORKBENCH_SUBMODULE_DIR}/dynamixel_workbench_toolbox/src/dynamixel_workbench_toolbox/dynamixel_item.cpp
+    ${DYNAMIXEL_WORKBENCH_SUBMODULE_DIR}/dynamixel_workbench_toolbox/src/dynamixel_workbench_toolbox/dynamixel_driver.cpp
+    ${DYNAMIXEL_WORKBENCH_SUBMODULE_DIR}/dynamixel_workbench_toolbox/src/dynamixel_workbench_toolbox/dynamixel_tool.cpp
+    ${DYNAMIXEL_WORKBENCH_SUBMODULE_DIR}/dynamixel_workbench_toolbox/src/dynamixel_workbench_toolbox/dynamixel_workbench.cpp
     )
 
 # find dependencies
@@ -69,11 +83,12 @@ endif (NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
 
 # Controller
 add_executable(dynamixel_controller
+    ${DYNAMIXEL_SDK_SOURCES}
     ${DYNAMIXEL_WORKBENCH_SOURCES}
     src/dynamixel_controller.cpp
     )
+
 add_dependencies(dynamixel_controller
-    DynamixelSDK
     ${PROJECT_NAME}
     )
 
@@ -83,13 +98,15 @@ target_include_directories(dynamixel_controller PUBLIC
     ${EIGEN3_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIRS}
     ${DYNAMIXEL_SDK_INCLUDE_DIRS}
+    ${DYNAMIXEL_SDK_INCLUDE_DIRS}/dynamixel_sdk
     ${DYNAMIXEL_WORKBENCH_INCLUDE_DIRS}
     )
+
+message(${DYNAMIXEL_SDK_INCLUDE_DIRS})
 
 target_link_libraries(dynamixel_controller
     ${Eigen3_LIBRARIES}
     ${YAML_CPP_LIBRARIES}
-    ${DYNAMIXEL_SDK_LIBRARIES}
     )
 
 ament_target_dependencies(dynamixel_controller
@@ -122,6 +139,8 @@ endforeach ()
 install(TARGETS dynamixel_controller
     EXPORT export_${PROJECT_NAME}
     DESTINATION lib/${PROJECT_NAME})
+
+install(FILES ${DYNAMIXEL_SDK_LIBRARIES} DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY
     config
