@@ -3,9 +3,15 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /Effort1
+        - /Effort1/CF_joint_01
+        - /Effort1/FT_joint_01
+        - /Effort1/TC_joint_01
+        - /RobotModel1
+        - /RobotModel1/Links1
       Splitter Ratio: 0.5404762029647827
-    Tree Height: 286
+    Tree Height: 359
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -73,29 +79,29 @@ Visualization Manager:
       CF_joint_0:
         Value: true
       CF_joint_1:
-        Value: true
+        Value: false
       CF_joint_2:
-        Value: true
+        Value: false
       CF_joint_3:
-        Value: true
+        Value: false
       CF_joint_4:
-        Value: true
+        Value: false
       CF_joint_5:
-        Value: true
+        Value: false
       Class: rviz/Effort
-      Enabled: false
+      Enabled: true
       FT_joint_0:
         Value: true
       FT_joint_1:
-        Value: true
+        Value: false
       FT_joint_2:
-        Value: true
+        Value: false
       FT_joint_3:
-        Value: true
+        Value: false
       FT_joint_4:
-        Value: true
+        Value: false
       FT_joint_5:
-        Value: true
+        Value: false
       History Length: 1
       Joints:
         {}
@@ -105,26 +111,26 @@ Visualization Manager:
       TC_joint_0:
         Value: true
       TC_joint_1:
-        Value: true
+        Value: false
       TC_joint_2:
-        Value: true
+        Value: false
       TC_joint_3:
-        Value: true
+        Value: false
       TC_joint_4:
-        Value: true
+        Value: false
       TC_joint_5:
-        Value: true
+        Value: false
       TF Prefix: ""
-      Topic: /joint_states
-      Unreliable: true
-      Value: false
+      Topic: /mildred/joint_states
+      Unreliable: false
+      Value: true
       Width: 0.004999999888241291
     - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: true
       Enabled: true
       Links:
-        All Links Enabled: true
+        All Links Enabled: false
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
@@ -142,27 +148,27 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         coxa_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         coxa_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         coxa_4:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         coxa_5:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         femur_0:
           Alpha: 1
           Show Axes: false
@@ -172,57 +178,27 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         femur_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         femur_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         femur_4:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         femur_5:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
-        foot_frame_0:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        foot_frame_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        foot_frame_2:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        foot_frame_3:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        foot_frame_4:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        foot_frame_5:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
+          Value: false
         leg_0:
           Alpha: 1
           Show Axes: false
@@ -232,27 +208,27 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         leg_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         leg_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         leg_4:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         leg_5:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         thorax:
           Alpha: 1
           Show Axes: false
@@ -267,27 +243,27 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         tibia_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         tibia_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         tibia_4:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         tibia_5:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -334,18 +310,18 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.37979620695114136
+      Pitch: 0.344796359539032
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.2403910160064697
+      Yaw: 1.6103891134262085
     Saved: ~
 Window Geometry:
   Displays:
-    collapsed: true
-  Height: 583
-  Hide Left Dock: true
+    collapsed: false
+  Height: 656
+  Hide Left Dock: false
   Hide Right Dock: true
-  QMainWindow State: 000000ff00000000fd0000000400000000000001a6000001a9fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073000000003d000001a9000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f000001a9fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d000001a9000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000003f00000003efc0100000002fb0000000800540069006d00650100000000000003f0000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000003f0000001a900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000001a6000001f2fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d000001f2000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f000001a9fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d000001a9000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004d60000003efc0100000002fb0000000800540069006d00650100000000000004d6000002eb00fffffffb0000000800540069006d006501000000000000045000000000000000000000032a000001f200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -354,6 +330,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: true
-  Width: 1008
-  X: 2283
-  Y: 563
+  Width: 1238
+  X: 117
+  Y: 728

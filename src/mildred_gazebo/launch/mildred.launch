@@ -1,11 +1,11 @@
 <launch>
-    <arg name="paused" default="false"/>
+    <arg name="paused" default="true"/>
     <arg name="use_sim_time" default="true"/>
     <arg name="gui" default="true"/>
     <arg name="headless" default="false"/>
     <arg name="debug" default="false"/>
 
-    <!-- Load robot model into paramater server -->
+    <!-- Load robot model into parameter server -->
     <include file="$(find mildred_description)/launch/load_model.launch"/>
 
     <!-- Launch gazebo -->
@@ -22,17 +22,17 @@
     <rosparam command="load" file="$(find mildred_gazebo)/config/mildred_control.yaml"/>
 
     <!-- Load controllers -->
-    <node name="mildred_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
+    <node name="mildred_controller_spawner" pkg="controller_manager" type="spawner" respawn="true" output="screen"
           ns="/mildred"
           args="joint_state_controller
                 joint_position_controller"/>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mildred_description)/config/mildred.rviz" />
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mildred_description)/config/mildred.rviz" output="screen" />
 
-    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-z -1 -unpause -urdf -param robot_description -model mildred" respawn="false" output="screen" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-z 0.3 -urdf -param robot_description -model mildred" respawn="false" output="screen" />
 
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" respawn="false" output="screen">
-        <param name="publish_frequency" type="double" value="30.0" />
+        <param name="publish_frequency" type="double" value="60" />
         <remap from="/joint_states" to="/mildred/joint_states" />
     </node>
 </launch>

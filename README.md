@@ -8,6 +8,7 @@ A ROS Based Hexapod
     sudo apt install sudo apt install \
     ros-melodic-joy ros-melodic-joystick-drivers \  
     ros-melodic-dynamixel-sdk ros-melodic-dynamixel-workbench \
+    ros-melodic-effort-controllers \
     libyaml-cpp-dev \
     liburdfdom-tools 
 
