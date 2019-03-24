@@ -1,0 +1,46 @@
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:property name="leg_angle" value="45"/>
+
+    <xacro:property name="thorax_radius" value="0.064"/>
+    <xacro:property name="thorax_height" value="0.040"/>
+    <xacro:property name="coxa_length" value="0.03525"/>
+    <xacro:property name="femur_length" value="0.090"/>
+    <!--<xacro:property name="femur_angle" value="36"/>-->
+    <xacro:property name="tibia_length" value="0.180"/>
+    <!--<xacro:property name="tibia_angle" value="21"/>-->
+
+    <xacro:property name="thorax_mass" value="0.2"/>
+    <xacro:property name="coxa_mass" value="0.162"/>
+    <xacro:property name="femur_mass" value="0.025981"/>
+    <xacro:property name="tibia_mass" value="0.107208"/>
+    <xacro:property name="foot_radius" value="0.012"/>
+    <xacro:property name="foot_mass" value="0.005"/>
+
+    <!--<xacro:property name="thorax_mass" value="1.0"/>-->
+    <!--<xacro:property name="coxa_mass" value="1.0"/>-->
+    <!--<xacro:property name="femur_mass" value="1.0"/>-->
+    <!--<xacro:property name="tibia_mass" value="1.0"/>-->
+    <!--<xacro:property name="foot_mass" value="1.0"/>-->
+
+    <!-- http://emanual.robotis.com/docs/en/dxl/x/xl430-w250/#specifications -->
+    <xacro:property name="max_torque" value="1.4"/> <!-- this is stall torque, graph shows 0.84 -->
+    <xacro:property name="max_velocity" value="${((2*pi)/60)*57}"/> <!-- rpm to rad/s -->
+    <!--<xacro:property name="max_torque" value="10000"/> &lt;!&ndash; fuck it, just move &ndash;&gt;-->
+    <!--<xacro:property name="max_velocity" value="100"/> &lt;!&ndash; fuck it, just move &ndash;&gt;-->
+
+    <!-- Joint Properties -->
+    <xacro:property name="TC_joint_lower_limit" value="-1.4"/>
+    <xacro:property name="TC_joint_upper_limit" value="1.4"/>
+
+    <xacro:property name="CF_joint_lower_limit" value="-1.6"/>
+    <xacro:property name="CF_joint_upper_limit" value="1.8"/>
+
+    <xacro:property name="FT_joint_lower_limit" value="-1.7"/>
+    <xacro:property name="FT_joint_upper_limit" value="2.0"/>
+
+    <!--<xacro:property name="damping" value="0.7"/>-->
+    <!--<xacro:property name="friction" value="100.0"/>-->
+    <xacro:property name="damping" value="0"/>
+    <xacro:property name="friction" value="0"/>
+</robot>

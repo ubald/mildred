@@ -10,6 +10,7 @@
 
   <depend>roscpp</depend>
   <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
   <depend>joy</depend>
   <depend>ps3joy</depend>
   <depend>mildred_core</depend>

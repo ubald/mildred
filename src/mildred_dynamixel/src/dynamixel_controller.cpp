@@ -5,9 +5,9 @@ DynamixelController::DynamixelController(const std::string port, const uint32_t 
       privateNodeHandle("~"),
       port(port),
       baudRate(baudRate) {
-    readFrequency = privateNodeHandle.param<uint8_t>("read_frequency", 60);
-    writeFrequency = privateNodeHandle.param<uint8_t>("write_frequency", 60);
-    publishFrequency = privateNodeHandle.param<uint8_t>("publish_frequency", 60);
+    readFrequency = privateNodeHandle.param("read_frequency", 60);
+    writeFrequency = privateNodeHandle.param("write_frequency", 60);
+    publishFrequency = privateNodeHandle.param("publish_frequency", 60);
 
     dynamixelWorkbench = std::make_unique<DynamixelWorkbench>();
 }

@@ -39,6 +39,11 @@ You must have [bass](https://github.com/edc/bass) installed.
 
     source install/setup.bash
 
+## Fix gazebo in vmware
+
+    export SVGA_VGPU10=0
+
+
 # Other References
 
 ## Dynamixel Workbench

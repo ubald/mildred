@@ -4,6 +4,7 @@
       <w>coxa</w>
       <w>dynamixel</w>
       <w>dynamixels</w>
+      <w>revolute</w>
     </words>
   </dictionary>
 </component>

@@ -1,0 +1,3 @@
+<launch>
+    <node name="mildred_control" pkg="mildred_control" type="mildred_control" output="screen" respawn="false" />
+</launch>

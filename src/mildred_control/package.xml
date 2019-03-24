@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>mildred_dynamixel</name>
+  <name>mildred_control</name>
   <version>0.0.0</version>
-  <description>The Mildred hexapod dynamixel motor control nodes.</description>
+  <description>The Mildred hexapod control nodes.</description>
   <maintainer email="ubald@ubaldesign.com">François Ubald Brien</maintainer>
   <license>MIT</license>
 
@@ -10,8 +10,11 @@
 
   <depend>roscpp</depend>
   <depend>std_msgs</depend>
-  <depend>dynamixel_sdk</depend>
-  <depend>dynamixel_workbench_toolbox</depend>
+  <depend>urdf</depend>
+  <depend>orocos_kdl</depend>
+  <depend>kdl_parser</depend>
+  <depend>eigen</depend>
+  <depend>mildred_core</depend>
 
   <export>
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(mildred_teleop)
+project(mildred_control)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
@@ -10,9 +10,13 @@ add_compile_options(-std=c++14)
 find_package(catkin REQUIRED COMPONENTS
     roscpp
     std_msgs
-    sensor_msgs
+    urdf
+    orocos_kdl
+    kdl_parser
     mildred_core
     )
+
+find_package(Eigen3 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -106,8 +110,8 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
     INCLUDE_DIRS include
     #  LIBRARIES mildred_control
-    CATKIN_DEPENDS roscpp std_msgs sensor_msgs mildred_core
-    #  DEPENDS system_lib
+    CATKIN_DEPENDS roscpp std_msgs urdf kdl_parser mildred_core
+    DEPENDS EIGEN3 orocos_kdl
 )
 
 ###########
@@ -119,6 +123,7 @@ catkin_package(
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -134,7 +139,15 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_ps3 src/mildred_teleop_ps3.cpp)
+add_executable(${PROJECT_NAME}
+    src/mildred_control.cpp
+    src/frame/Body.cpp
+    src/frame/Joint.cpp
+    src/frame/Leg.cpp
+    src/gait/Gait.cpp
+    src/gait/ContinuousGait.cpp
+    src/ik/UChainIkSolverPosNRJL.cpp
+    )
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -144,11 +157,12 @@ add_executable(${PROJECT_NAME}_ps3 src/mildred_teleop_ps3.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME}_ps3 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_ps3
+target_link_libraries(${PROJECT_NAME}
     ${catkin_LIBRARIES}
+    ${EIGEN3_LIBRARIES}
     )
 
 #############
@@ -191,7 +205,7 @@ target_link_libraries(${PROJECT_NAME}_ps3
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_mildred_teleop.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_mildred_control.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
