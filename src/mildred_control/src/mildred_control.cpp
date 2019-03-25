@@ -19,27 +19,44 @@ int main(int argc, char **argv) {
     //Setup Body
     body = std::make_unique<Mildred::Body>();
 
-    //Get the robot description from the parameter server
-    std::string robotDescriptionXML;
-    if (!n.getParam("robot_description", robotDescriptionXML)) {
-        ROS_ERROR("mildred_control::main() Failed to load the robot description XML from the parameter server");
+    auto model = std::make_shared<urdf::Model>();
+    if (!model->initParam("robot_description")){
+        ROS_ERROR("mildred_control::main() Could not generate robot model");
         return 1;
     }
+
+    ROS_INFO("Loaded %s model", model->getName().c_str());
+
+    //Get the robot description from the parameter server
+    //std::string robotDescriptionXML;
+    //if (!n.getParam("robot_description", robotDescriptionXML)) {
+    //    ROS_ERROR("mildred_control::main() Failed to load the robot description XML from the parameter server");
+    //    return 1;
+    //}
 
     //Initialize the URDF model from the XML
-    urdf::Model model;
-    if (!model.initString(robotDescriptionXML)) {
-        ROS_ERROR("mildred_control::main() Failed to initialize robot model");
-        return 1;
-    }
+    //urdf::Model model;
+    //if (!model.initString(robotDescriptionXML)) {
+    //    ROS_ERROR("mildred_control::main() Failed to initialize robot model");
+    //    return 1;
+    //}
+
+    //KDL::Tree tree;
+    //if (!kdl_parser::treeFromUrdfModel(model, tree)) {
+    //    ROS_ERROR("mildred_control::main() Failed to initialize tree");
+    //    return 1;
+    //}
+
+    ROS_INFO("Initialized KDL tree");
 
     //Setup body
+    // TODO: Put names in config
     if (!body->setup(model, "thorax", "foot_frame")) {
         ROS_ERROR("mildred_control::main() Failed to setup body");
         return 1;
     }
 
-    return 0;
+    //return 0;
 
     //TODO: Select default gait
     //TODO: Wake up, starting pose
@@ -60,19 +77,19 @@ int main(int argc, char **argv) {
 
 #ifdef VIZ_DEBUG
         visualization_msgs::Marker marker;
-        marker.header.frame_id         = "base_link";
-        marker.header.stamp            = ros::Time::now();
-        marker.ns                      = "mildred";
-        marker.id                      = 0;
-        marker.type                    = visualization_msgs::Marker::POINTS;
-        marker.action                  = visualization_msgs::Marker::ADD;
-        marker.scale.x                 = 0.005;
-        marker.scale.y                 = 0.005;
-        marker.scale.z                 = 0.005;
-        marker.color.a                 = 1.0;
-        marker.color.r                 = 1.0;
-        marker.color.g                 = 0.5;
-        marker.color.b                 = 0.0;
+        marker.header.frame_id = "base_link";
+        marker.header.stamp    = ros::Time::now();
+        marker.ns              = "mildred";
+        marker.id              = 0;
+        marker.type            = visualization_msgs::Marker::POINTS;
+        marker.action          = visualization_msgs::Marker::ADD;
+        marker.scale.x         = 0.005;
+        marker.scale.y         = 0.005;
+        marker.scale.z         = 0.005;
+        marker.color.a         = 1.0;
+        marker.color.r         = 1.0;
+        marker.color.g         = 0.5;
+        marker.color.b         = 0.0;
 #endif
 
         //Send the joint positions values to the actuators

@@ -5,26 +5,27 @@ namespace Mildred {
 
     }
 
-    bool Body::setup(urdf::Model model, std::string root, std::string leg_tip_prefix) {
+    bool Body::setup(std::shared_ptr<urdf::Model> model, std::string rootName, std::string legTipPrefix) {
         //Initialize tree object
-        if (!kdl_parser::treeFromUrdfModel(model, tree)) {
+        auto tree = std::make_unique<KDL::Tree>();
+        if (!kdl_parser::treeFromUrdfModel(*model, *tree)) {
             ROS_ERROR("Body::setup() Failed to initialize tree object");
             return false;
         }
 
         //Assign chains to legs
-        for (unsigned int i = 0; i < LEG_COUNT; i++) {
-            std::stringstream tip_ss;
-            tip_ss << leg_tip_prefix << "_" << i;
+        for (unsigned int i = 0; i < LEG_COUNT; ++i) {
+            std::string tipName = legTipPrefix + "_" + std::to_string(i);
 
-            KDL::Chain chain;
-            if (!tree.getChain(root, tip_ss.str(), chain)) {
-                ROS_ERROR("Body::setup() Failed to initialize chain object (root: %s, tip: %s)", root.c_str(), tip_ss.str().c_str());
+            auto chain = std::make_unique<KDL::Chain>();
+            ROS_INFO("Getting chain from %s to %s", rootName.c_str(), tipName.c_str());
+            if (!tree->getChain(rootName, tipName, *chain)) {
+                ROS_ERROR("Leg::setup() Failed to initialize chain object (root: %s, tip: %s)", rootName.c_str(), tipName.c_str());
                 return false;
             }
 
             auto leg = std::make_shared<Mildred::Leg>(i);
-            if (!leg->setup(model, chain, root, tip_ss.str())) {
+            if (!leg->setup(model, std::move(chain), rootName, tipName)) {
                 ROS_ERROR("Body::setup() Failed to setup Leg.");
                 return false;
             }

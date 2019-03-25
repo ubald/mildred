@@ -5,8 +5,6 @@ namespace Mildred {
         //Default positions
         currentPosition = targetPosition = 0.00;
 
-        //TODO: Setup servo
-
         //Joint state subscriber
         // TODO: Fix the hardcoded namespace
         jointStatesSubscriber = n.subscribe("/mildred/joint_states", 1, &Joint::jointsStatesCallback, this);

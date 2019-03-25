@@ -1,11 +1,12 @@
 #include "mildred_control/frame/Leg.h"
 
 namespace Mildred {
-    Leg::Leg(unsigned int legIndex) {
-        gaitConfig.index = legIndex;
+    Leg::Leg(unsigned int index) :
+        name("leg_" + std::to_string(index)) {
+        gaitConfig.index = index;
     }
 
-    bool Leg::setup(urdf::Model model, KDL::Chain chain, std::string root, std::string tip) {
+    bool Leg::setup(std::shared_ptr<urdf::Model> model, std::unique_ptr<KDL::Chain> chain, std::string root, std::string tip) {
         //Setup pid
         //lastPIDTime = ros::Time::now().sec + (ros::Time::now().nsec * 1e-9);
         //pidX.initPid(0.05, 0.00, 0.00, 0, 0);
@@ -13,11 +14,14 @@ namespace Mildred {
         //pidZ.initPid(0.05, 0.00, 0.00, 0, 0);
 
         //Name our leg, for easier identification in debug info
-        name = chain.segments[0].getName();
+        //name = chain->segments[0].getName();
 
-        //Compose root frame and leg/hip frame
-        //This is highly dependent on our specific URDF model design
-        frame = chain.segments[0].getFrameToTip() * chain.segments[1].getFrameToTip();
+        ROS_INFO("Setting up leg %s starting at %s", name.c_str(), chain->segments[0].getName().c_str());
+
+        // Compose root frame and leg/hip frame
+        // This is highly dependent on our specific URDF model design
+        // Previous model had a hip before the coxa
+        frame = chain->segments[0].getFrameToTip(); // * chain->segments[1].getFrameToTip();
 
         //Gait configuration
         double r, p, y;
@@ -25,94 +29,91 @@ namespace Mildred {
         gaitConfig.alpha = y;
 
         //Initialize the total number of joints
-        num_joints = 0;
+        jointCount = 0;
 
-        /**
-         * Get the joints limits
-         */
+        // Get the joints limits
 
-        auto link = model.getLink(tip);
-        std::shared_ptr<const urdf::Joint> link_joint;
+        // Count joints and check that chain isn't broken
+        auto modelLink = model->getLink(tip);
+        while (modelLink && modelLink->parent_joint) {
+            //if (!modelLink->parent_joint) {
+                //ROS_ERROR("Link %s has no parent joint", modelLink->name.c_str());
+                //return false;
+            //}
 
-        //Count joints and check that chain isn't broken
-        //NOTE: Taken from other source, could be improved a lot, like root name could be found in the chain
-        while (link && link->name != root) {
-            link_joint = model.getJoint(link->parent_joint->name);
-            if (!link_joint) {
-                ROS_ERROR("Leg: Failed to find joints");
-                return false;
+            if (modelLink->parent_joint->type != urdf::Joint::UNKNOWN && modelLink->parent_joint->type != urdf::Joint::FIXED) {
+                jointCount++;
             }
-            if (link_joint->type != urdf::Joint::UNKNOWN && link_joint->type != urdf::Joint::FIXED) {
-                ROS_INFO("Adding joint: %s", link_joint->name.c_str());
-                num_joints++;
-            }
-            link = model.getLink(link->getParent()->name);
+
+            //modelLink = model->getLink(modelLink->getParent()->name);
+            modelLink = modelLink->getParent();
         }
 
-        joint_min.resize(num_joints);
-        joint_max.resize(num_joints);
+        ROS_INFO("Found %d joints", jointCount);
+        KDL::JntArray jointMinimums(jointCount);
+        KDL::JntArray jointMaximums(jointCount);
 
         //Re-traverse the chain and save limits
-        link = model.getLink(tip);
+        modelLink = model->getLink(tip);
         unsigned int i = 0;
-        while (link && i < num_joints) {
-            link_joint = model.getJoint(link->parent_joint->name);
-            if (link_joint->type != urdf::Joint::UNKNOWN && link_joint->type != urdf::Joint::FIXED) {
-                ROS_INFO("Getting bounds for joint: %s", link_joint->name.c_str());
+        while (modelLink && modelLink->parent_joint) {
+            const auto modelJoint = modelLink->parent_joint;
+            if (modelJoint->type != urdf::Joint::UNKNOWN && modelJoint->type != urdf::Joint::FIXED) {
+                ROS_INFO("Getting bounds for joint: %s", modelJoint->name.c_str());
 
                 //Save name to our joint object
-                joint[i].name = link_joint->name;
+                joint[i].name = modelJoint->name;
                 //TODO: Save actual joint pointer, create new UWalker::Joint here...
 
                 //Get limits
                 //TODO: Modify our solver to support a UWalker::Joint array instead and save these limits to our joint
                 double lower, upper;
-                //int hasLimits;
-                if (link_joint->type != urdf::Joint::CONTINUOUS) {
-                    lower = link_joint->limits->lower;
-                    upper = link_joint->limits->upper;
-                    //hasLimits = 1;
+                if (modelJoint->type != urdf::Joint::CONTINUOUS) {
+                    lower = modelJoint->limits->lower;
+                    upper = modelJoint->limits->upper;
                 } else {
                     lower = -M_PI;
                     upper = M_PI;
-                    //hasLimits = 0;
                 }
-                int index = num_joints - i - 1;
-                joint_min.data[index] = lower;
-                joint_max.data[index] = upper;
+
+                int index = jointCount - i - 1;
+                jointMinimums.data[index] = lower;
+                jointMaximums.data[index] = upper;
+
                 i++;
             }
-            link = model.getLink(link->getParent()->name);
+
+            modelLink = modelLink->getParent();
         }
 
         //Build Solvers
-        fk_solver = std::make_unique<KDL::ChainFkSolverPos_recursive>(chain);
-        ik_solver_vel = std::make_unique<KDL::ChainIkSolverVel_wdls>(chain);
+        fk_solver     = std::make_unique<KDL::ChainFkSolverPos_recursive>(*chain);
+        ik_solver_vel = std::make_unique<KDL::ChainIkSolverVel_wdls>(*chain);
 
         //Only the end effector position is needed - Task Space
         //NOTE: I don't know the fuck this does but without it it can't solve...
-        Eigen::MatrixXd matrix_Mx = Eigen::MatrixXd::Identity(6, 6);
-        matrix_Mx(3, 3) = 0;
-        matrix_Mx(4, 4) = 0;
-        matrix_Mx(5, 5) = 0;
-        ik_solver_vel->setWeightTS(matrix_Mx);
-        ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR_JL>(chain, joint_min, joint_max, *fk_solver, *ik_solver_vel, 1000, 0.001);
+        //Eigen::MatrixXd matrix_Mx = Eigen::MatrixXd::Identity(6, 6);
+        //matrix_Mx(3, 3) = 0;
+        //matrix_Mx(4, 4) = 0;
+        //matrix_Mx(5, 5) = 0;
+        //ik_solver_vel->setWeightTS(matrix_Mx);
+        ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR_JL>(*chain, jointMinimums, jointMaximums, *fk_solver, *ik_solver_vel, 1000, 0.001f);
 
         //Resize our q_init array
         //NOTE: This used to be in doIK but I fear it was affecting performance
-        q_init.resize(num_joints);
+        q_init.resize(jointCount);
 
         //Assign initialization values, if IK fails on startup look here...
         /*init_run = true;
-         for ( unsigned int j = 0; j < num_joints; j++)
+         for ( unsigned int j = 0; j < jointCount; j++)
          {
          q_init(j) = M_PI / 2;
          }*/
 
         //Default joint init values for IK
-        joint[0].targetPosition = 0.00;
-        joint[1].targetPosition = -M_PI_2;
-        joint[2].targetPosition = 3 * M_PI_4;
+        joint[0].targetPosition = 0.00f;
+        joint[1].targetPosition = 0.00f; //-M_PI_2;
+        joint[2].targetPosition = 0.00f; //3 * M_PI_4;
 
         return true;
     }
@@ -160,8 +161,8 @@ namespace Mildred {
         int ik_valid = ik_solver_pos->CartToJnt(q_init, p_in, q_out);
         // Only when a solution is found it will be sent
         if (ik_valid >= 0) {
-            init_run = false;
-            for (unsigned int i = 0; i < num_joints; i++) {
+            init_run            = false;
+            for (unsigned int i = 0; i < jointCount; i++) {
                 joint[i].targetPosition = q_out(i);
             }
         } else {

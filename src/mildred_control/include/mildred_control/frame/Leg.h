@@ -35,9 +35,9 @@ namespace Mildred {
         /**
          * Constructor
          *
-         * @param legIndex Index of the leg, used for the gait phases and order.
+         * @param index Index of the leg, used for the gait phases and order.
          */
-        explicit Leg(unsigned int legIndex);
+        explicit Leg(unsigned int index);
         ~Leg() = default;
 
         /**
@@ -62,7 +62,7 @@ namespace Mildred {
          * @param tip   Name of the tip element
          * @return True on success, or false on failure
          */
-        bool setup(urdf::Model model, KDL::Chain chain, std::string root, std::string tip);
+        bool setup(std::shared_ptr<urdf::Model> model, std::unique_ptr<KDL::Chain> chain, std::string root, std::string tip);
 
         /**
          * Set the current gait the leg will use when walking.
@@ -81,7 +81,7 @@ namespace Mildred {
 
     protected:
         ros::NodeHandle                n;
-        std::shared_ptr<Mildred::Gait> currentGait;
+        std::shared_ptr<Mildred::Gait> currentGait{nullptr};
         //double               lastPIDTime;
         //control_toolbox::Pid pidX;
         //control_toolbox::Pid pidY;
@@ -89,13 +89,12 @@ namespace Mildred {
 
     private:
         bool                                             init_run;
-        unsigned int                                     num_joints;
-        KDL::JntArray                                    joint_min, joint_max;
+        unsigned int                                     jointCount;
         KDL::JntArray                                    q_init;
         KDL::JntArray                                    q_out;
-        std::unique_ptr<KDL::ChainFkSolverPos_recursive> fk_solver;
-        std::unique_ptr<KDL::ChainIkSolverVel_wdls>      ik_solver_vel;
-        std::unique_ptr<KDL::ChainIkSolverPos_NR_JL>     ik_solver_pos;
+        std::unique_ptr<KDL::ChainFkSolverPos_recursive> fk_solver{nullptr};
+        std::unique_ptr<KDL::ChainIkSolverVel_wdls>      ik_solver_vel{nullptr};
+        std::unique_ptr<KDL::ChainIkSolverPos_NR_JL>     ik_solver_pos{nullptr};
     };
 
 }
