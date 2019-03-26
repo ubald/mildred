@@ -1,12 +1,9 @@
 #include "mildred_control/frame/Body.h"
 
 namespace Mildred {
-    Body::Body() {
+    Body::Body() {}
 
-    }
-
-    bool Body::setup(std::shared_ptr<urdf::Model> model, std::string rootName, std::string legTipPrefix) {
-        //Initialize tree object
+    bool Body::setup(std::shared_ptr<urdf::Model> model, std::string legTipPrefix) {
         auto tree = std::make_unique<KDL::Tree>();
         if (!kdl_parser::treeFromUrdfModel(*model, *tree)) {
             ROS_ERROR("Body::setup() Failed to initialize tree object");
@@ -18,15 +15,15 @@ namespace Mildred {
             std::string tipName = legTipPrefix + "_" + std::to_string(i);
 
             auto chain = std::make_unique<KDL::Chain>();
-            ROS_INFO("Getting chain from %s to %s", rootName.c_str(), tipName.c_str());
-            if (!tree->getChain(rootName, tipName, *chain)) {
-                ROS_ERROR("Leg::setup() Failed to initialize chain object (root: %s, tip: %s)", rootName.c_str(), tipName.c_str());
+            ROS_INFO("Getting chain from to %s", tipName.c_str());
+            if (!tree->getChain("base_link", tipName, *chain)) {
+                ROS_ERROR("Failed to initialize chain to %s", tipName.c_str());
                 return false;
             }
 
             auto leg = std::make_shared<Mildred::Leg>(i);
-            if (!leg->setup(model, std::move(chain), rootName, tipName)) {
-                ROS_ERROR("Body::setup() Failed to setup Leg.");
+            if (!leg->setup(model, std::move(chain), tipName)) {
+                ROS_ERROR("Failed to setup Leg");
                 return false;
             }
 
@@ -40,6 +37,12 @@ namespace Mildred {
         setGait(CONTINUOUS, RIPPLE);
 
         return true;
+    }
+
+    void Body::setJointState(const sensor_msgs::JointState::ConstPtr& jointState) {
+        for (const auto &leg:legs) {
+            leg->setJointState(jointState);
+        }
     }
 
     void Body::setGait(Mildred::EGaitShape shape, Mildred::EGaitSequence sequence) {

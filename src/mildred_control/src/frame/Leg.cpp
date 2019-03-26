@@ -6,7 +6,7 @@ namespace Mildred {
         gaitConfig.index = index;
     }
 
-    bool Leg::setup(std::shared_ptr<urdf::Model> model, std::unique_ptr<KDL::Chain> chain, std::string root, std::string tip) {
+    bool Leg::setup(std::shared_ptr<urdf::Model> model, std::unique_ptr<KDL::Chain> chain, std::string tip) {
         //Setup pid
         //lastPIDTime = ros::Time::now().sec + (ros::Time::now().nsec * 1e-9);
         //pidX.initPid(0.05, 0.00, 0.00, 0, 0);
@@ -62,7 +62,7 @@ namespace Mildred {
                 ROS_INFO("Getting bounds for joint: %s", modelJoint->name.c_str());
 
                 //Save name to our joint object
-                joint[i].name = modelJoint->name;
+                joints[i].name = modelJoint->name;
                 //TODO: Save actual joint pointer, create new UWalker::Joint here...
 
                 //Get limits
@@ -111,11 +111,17 @@ namespace Mildred {
          }*/
 
         //Default joint init values for IK
-        joint[0].targetPosition = 0.00f;
-        joint[1].targetPosition = 0.00f; //-M_PI_2;
-        joint[2].targetPosition = 0.00f; //3 * M_PI_4;
+        joints[0].targetPosition = 0.00f;
+        joints[1].targetPosition = 0.00f; //-M_PI_2;
+        joints[2].targetPosition = 0.00f; //3 * M_PI_4;
 
         return true;
+    }
+
+    void Leg::setJointState(const sensor_msgs::JointState::ConstPtr& jointState) {
+        for (auto &joint:joints) {
+            joint.setJointState(jointState);
+        }
     }
 
     void Leg::setGait(std::shared_ptr<Mildred::Gait> gait) {
@@ -154,8 +160,8 @@ namespace Mildred {
 
         //Get the current joint positions (our array is base->tip, IK works with tip->base)
         for (unsigned int i = 0; i < JOINT_COUNT; i++) {
-            std::cout << joint[i].currentPosition << std::endl;
-            q_init((JOINT_COUNT - 1) - i) = joint[i].currentPosition;
+            std::cout << joints[i].currentPosition << std::endl;
+            q_init((JOINT_COUNT - 1) - i) = joints[i].currentPosition;
         }
 
         int ik_valid = ik_solver_pos->CartToJnt(q_init, p_in, q_out);
@@ -163,7 +169,7 @@ namespace Mildred {
         if (ik_valid >= 0) {
             init_run            = false;
             for (unsigned int i = 0; i < jointCount; i++) {
-                joint[i].targetPosition = q_out(i);
+                joints[i].targetPosition = q_out(i);
             }
         } else {
             ROS_WARN("Leg::doIK() IK Solution not found for : %s, error: %d", name.c_str(), ik_valid);

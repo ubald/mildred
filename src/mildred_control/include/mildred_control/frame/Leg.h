@@ -5,13 +5,10 @@
 #include <Eigen/Core>
 
 #include <ros/ros.h>
-
+#include <sensor_msgs/JointState.h>
 #include <urdf/model.h>
 #include <urdf_model/link.h>
 #include <urdf_model/joint.h>
-
-//#include "mildred_control/ik/UChainIkSolverPosNRJL.h"
-
 #include <kdl/chain.hpp>
 #include <kdl/jntarray.hpp>
 #include <kdl/frames.hpp>
@@ -19,9 +16,10 @@
 #include <kdl/chainfksolverpos_recursive.hpp>
 #include <kdl/chainiksolverpos_nr_jl.hpp>
 
-#include <control_toolbox/pid.h>
+//#include <control_toolbox/pid.h>
 
-#include "mildred_control/gait/Gait.h"
+#include <mildred_control/gait/Gait.h>
+//#include "mildred_control/ik/UChainIkSolverPosNRJL.h"
 
 #include "Joint.h"
 
@@ -62,7 +60,9 @@ namespace Mildred {
          * @param tip   Name of the tip element
          * @return True on success, or false on failure
          */
-        bool setup(std::shared_ptr<urdf::Model> model, std::unique_ptr<KDL::Chain> chain, std::string root, std::string tip);
+        bool setup(std::shared_ptr<urdf::Model> model, std::unique_ptr<KDL::Chain> chain, std::string tip);
+
+        void setJointState(const sensor_msgs::JointState::ConstPtr& jointState);
 
         /**
          * Set the current gait the leg will use when walking.
@@ -75,12 +75,11 @@ namespace Mildred {
         KDL::Vector               targetPosition;
         KDL::Frame                frame;
         static const unsigned int JOINT_COUNT = 3;
-        Mildred::Joint            joint[JOINT_COUNT];
+        Mildred::Joint            joints[JOINT_COUNT];
         KDL::Vector doGait();
         bool doIK(KDL::Vector target);
 
     protected:
-        ros::NodeHandle                n;
         std::shared_ptr<Mildred::Gait> currentGait{nullptr};
         //double               lastPIDTime;
         //control_toolbox::Pid pidX;

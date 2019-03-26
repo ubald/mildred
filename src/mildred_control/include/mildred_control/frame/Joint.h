@@ -1,9 +1,9 @@
 #pragma once
 
+#include <string>
+
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-
-typedef boost::shared_ptr<sensor_msgs::JointState const> JointStateConstPtr;
 
 namespace Mildred {
     class Joint {
@@ -11,15 +11,13 @@ namespace Mildred {
         Joint();
         ~Joint() = default;
 
+        void setJointState(const sensor_msgs::JointState::ConstPtr &jointState);
 
         std::string name;
-        double      targetPosition;
-        double      currentPosition;
 
-    protected:
-        ros::NodeHandle n{};
-
-        ros::Subscriber jointStatesSubscriber;
-        void jointsStatesCallback(const JointStateConstPtr &jointStatesMessage);
+        double targetPosition  = 0.f;
+        double currentPosition = 0.f;
+        double currentVelocity = 0.f;
+        double currentEffort   = 0.f;
     };
 }
