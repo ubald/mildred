@@ -7,6 +7,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <std_msgs/Float64MultiArray.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
 #include <trajectory_msgs/JointTrajectory.h>
@@ -28,6 +29,23 @@
 // #define DEBUG
 
 class DynamixelController {
+public:
+    DynamixelController(std::string port, uint32_t baudRate);
+    ~DynamixelController() = default;
+
+    bool init();
+
+    uint8_t getReadFrequency() { return readFrequency; }
+    uint8_t getWriteFrequency() { return writeFrequency; }
+    uint8_t getPublishFrequency() { return publishFrequency; }
+
+    void readCallback(const ros::TimerEvent &);
+    void writeCallback(const ros::TimerEvent &);
+    void publishCallback(const ros::TimerEvent &);
+
+    void dynamixelPositionControlCallback(const std_msgs::Float64MultiArray::ConstPtr &requestedPositionMessage);
+    bool dynamixelCommandMsgCallback(dynamixel_workbench_msgs::DynamixelCommand::Request &req, dynamixel_workbench_msgs::DynamixelCommand::Response &res);
+
 private:
     // ROS NodeHandle
     ros::NodeHandle nodeHandle;
@@ -81,19 +99,4 @@ private:
     void initSubscriber();
     void initServices();
 
-public:
-    DynamixelController(std::string port, uint32_t baudRate);
-    ~DynamixelController();
-
-    bool init();
-
-    uint8_t getReadFrequency() { return readFrequency; }
-    uint8_t getWriteFrequency() { return writeFrequency; }
-    uint8_t getPublishFrequency() { return publishFrequency; }
-
-    void readCallback(const ros::TimerEvent &);
-    void writeCallback(const ros::TimerEvent &);
-    void publishCallback(const ros::TimerEvent &);
-
-    bool dynamixelCommandMsgCallback(dynamixel_workbench_msgs::DynamixelCommand::Request &req, dynamixel_workbench_msgs::DynamixelCommand::Response &res);
 };
