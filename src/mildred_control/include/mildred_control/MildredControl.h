@@ -6,6 +6,7 @@
 
 #include <ros/ros.h>
 #include <std_msgs/ColorRGBA.h>
+#include <std_msgs/Float64MultiArray.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Point.h>
 #include <visualization_msgs/Marker.h>
@@ -29,6 +30,8 @@ namespace Mildred {
 
         ros::Subscriber controlSubscriber;
         ros::Subscriber jointStatesSubscriber;
+        ros::Publisher targetJointPositionPublisher;
+        std_msgs::Float64MultiArray targetJointPositionMessage;
 
         std::unique_ptr<Mildred::Body> body{nullptr};
 

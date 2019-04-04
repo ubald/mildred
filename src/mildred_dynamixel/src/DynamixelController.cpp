@@ -173,7 +173,7 @@ bool DynamixelController::initDynamixels() {
             }
         }
 
-        dynamixelWorkbench->torqueOn(dxl.second);
+        // dynamixelWorkbench->torqueOn(dxl.second);
     }
 
     return true;

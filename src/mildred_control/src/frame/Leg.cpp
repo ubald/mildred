@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "mildred_control/frame/Leg.h"
 
 namespace Mildred {
@@ -6,7 +8,7 @@ namespace Mildred {
         gaitConfig.index = index;
     }
 
-    bool Leg::setup(std::shared_ptr<urdf::Model> model, std::unique_ptr<KDL::Chain> chain, std::string tip) {
+    bool Leg::setup(std::shared_ptr<urdf::Model> model, std::unique_ptr<KDL::Chain> legChain, std::string tip) {
         //Setup pid
         //lastPIDTime = ros::Time::now().sec + (ros::Time::now().nsec * 1e-9);
         //pidX.initPid(0.05, 0.00, 0.00, 0, 0);
@@ -16,12 +18,13 @@ namespace Mildred {
         //Name our leg, for easier identification in debug info
         //name = chain->segments[0].getName();
 
+        chain = std::move(legChain);
+
         ROS_INFO("Setting up leg %s starting at %s", name.c_str(), chain->segments[0].getName().c_str());
 
         // Compose root frame and leg/hip frame
         // This is highly dependent on our specific URDF model design
-        // Previous model had a hip before the coxa
-        frame = chain->segments[0].getFrameToTip(); // * chain->segments[1].getFrameToTip();
+        frame = chain->segments[0].getFrameToTip() * chain->segments[1].getFrameToTip();
 
         //Gait configuration
         double r, p, y;
@@ -97,11 +100,11 @@ namespace Mildred {
         //matrix_Mx(4, 4) = 0;
         //matrix_Mx(5, 5) = 0;
         //ik_solver_vel->setWeightTS(matrix_Mx);
-        ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR_JL>(*chain, jointMinimums, jointMaximums, *fk_solver, *ik_solver_vel, 1000, 0.001f);
+        ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR>(*chain, *fk_solver, *ik_solver_vel, 1000, 0.001f);
 
         //Resize our q_init array
-        //NOTE: This used to be in doIK but I fear it was affecting performance
         q_init.resize(jointCount);
+        q_out.resize(jointCount);
 
         //Assign initialization values, if IK fails on startup look here...
         /*init_run = true;
@@ -112,8 +115,8 @@ namespace Mildred {
 
         //Default joint init values for IK
         joints[0].targetPosition = 0.00f;
-        joints[1].targetPosition = 0.00f; //-M_PI_2;
-        joints[2].targetPosition = 0.00f; //3 * M_PI_4;
+        joints[1].targetPosition = 0.00f; // -M_PI_2;
+        joints[2].targetPosition = 0.00f;// 3 * M_PI_4;
 
         return true;
     }
@@ -127,7 +130,7 @@ namespace Mildred {
     void Leg::setGait(std::shared_ptr<Mildred::Gait> gait) {
         //TODO: Wait for the right moment to switch gait
         //TODO: Implement state machine with transitions
-        currentGait = gait;
+        currentGait = std::move(gait);
     }
 
     KDL::Vector Leg::doGait() {
@@ -152,11 +155,9 @@ namespace Mildred {
         //    pidY.updatePid(targetPosition.y() - target.y(), d),
         //    pidZ.updatePid(targetPosition.z() - target.z(), d)
         //);
-        ////ROS_ERROR_STREAM( "x:" << targetPosition.x() << " y:" << targetPosition.y() << " z:" << targetPosition.z() );
+        targetPosition = target;
+        ROS_ERROR_STREAM( "x:" << target.x() << " y:" << target.y() << " z:" << target.z() );
         //lastPIDTime    = now;
-
-        //Frame the target position
-        KDL::Frame p_in = KDL::Frame(target);
 
         //Get the current joint positions (our array is base->tip, IK works with tip->base)
         for (unsigned int i = 0; i < JOINT_COUNT; i++) {
@@ -164,7 +165,7 @@ namespace Mildred {
             q_init((JOINT_COUNT - 1) - i) = joints[i].currentPosition;
         }
 
-        int ik_valid = ik_solver_pos->CartToJnt(q_init, p_in, q_out);
+        int ik_valid = ik_solver_pos->CartToJnt(q_init, KDL::Frame(target), q_out);
         // Only when a solution is found it will be sent
         if (ik_valid >= 0) {
             init_run            = false;
@@ -174,7 +175,12 @@ namespace Mildred {
         } else {
             ROS_WARN("Leg::doIK() IK Solution not found for : %s, error: %d", name.c_str(), ik_valid);
             ROS_DEBUG("Leg::doIK() IK POS: %f %f %f", target.x(), target.y(), target.z());
+            ROS_DEBUG("Leg::doIK() Q_OUT: %f %f %f", q_out(0), q_out(1), q_out(2));
             init_run = true;
+
+            //for (unsigned int i = 0; i < jointCount; i++) {
+            //    joints[i].targetPosition = q_out(i);
+            //}
         }
 
         return (ik_valid >= 0);

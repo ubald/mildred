@@ -63,7 +63,7 @@ namespace Mildred {
          * Assign the gait to each leg
          * NOTE Is this really needed, do the legs need to know the gait?
          */
-        for (auto leg:legs) {
+        for (const auto &leg:legs) {
             leg->setGait(gait);
         }
     }
@@ -97,6 +97,8 @@ namespace Mildred {
          */
         direction = atan2(velocity.y(), velocity.x());
 
+        ROS_DEBUG("Speed: %f Direction: %f", speed, direction);
+
         /**
          * Prepare the gait with speed and direction as these values need not to be
          * computed for each legs as they stay the same.
@@ -106,7 +108,7 @@ namespace Mildred {
         /**
          * Compute Gait and IK on each leg
          */
-        for (auto leg:legs) {
+        for (const auto &leg:legs) {
             //Get leg gait position
             gaitStep = leg->doGait();
 

@@ -8,6 +8,7 @@ namespace Mildred {
 
         controlSubscriber     = nodeHandle.subscribe("/mildred/control", 1, &MildredControl::controlMessageCallback, this);
         jointStatesSubscriber = nodeHandle.subscribe("/mildred/joint_states", 1, &MildredControl::jointsStatesCallback, this);
+        targetJointPositionPublisher = nodeHandle.advertise<std_msgs::Float64MultiArray>("/mildred/joint_position_controller/command", 1);
 
         #ifdef VIZ_DEBUG
         targetMarkersPublisher = nodeHandle.advertise<visualization_msgs::Marker>("visualization_marker", 1);
@@ -28,6 +29,9 @@ namespace Mildred {
             ROS_ERROR("mildred_control::main() Failed to setup body");
             return false;
         }
+
+        // TODO: Calculate dynamically
+        targetJointPositionMessage.data.resize(18);
 
         return true;
     }
@@ -53,9 +57,9 @@ namespace Mildred {
         marker.id              = 0;
         marker.type            = visualization_msgs::Marker::POINTS;
         marker.action          = visualization_msgs::Marker::ADD;
-        marker.scale.x         = 0.005;
-        marker.scale.y         = 0.005;
-        marker.scale.z         = 0.005;
+        marker.scale.x         = 0.05;
+        marker.scale.y         = 0.05;
+        marker.scale.z         = 0.05;
         marker.color.a         = 1.0;
         marker.color.r         = 1.0;
         marker.color.g         = 0.5;
@@ -64,15 +68,16 @@ namespace Mildred {
 
         //Send the joint positions values to the actuators
         //Mildred::LegsJointsPositions legsJointsPositionsMsg;
+        uint8_t count = 0;
         for (auto const &leg:body->legs) {
-            //for (unsigned int j = 0; j < body->leg[i]->JOINT_COUNT; j++) {
-            //    legsJointsPositionsMsg.leg[i].joint[j] = body->leg[i]->joint[j].targetPosition;
-            //}
+            for (auto const &joint:leg->joints) {
+                targetJointPositionMessage.data[count] = joint.targetPosition;
+                count++;
+            }
 
 #ifdef VIZ_DEBUG
             //Add point to marker points
             geometry_msgs::Point point;
-            std::cout << leg->name << " " << leg->targetPosition.x() << " " << leg->targetPosition.y() << " " << leg->targetPosition.z() << std::endl;
             point.x = leg->targetPosition.x();
             point.y = leg->targetPosition.y();
             point.z = leg->targetPosition.z();
@@ -83,7 +88,7 @@ namespace Mildred {
         //TODO Joint limits (not necessarily in here)
 
         //Publish final joints positions
-        //legsJointsPositionsPublisher.publish(legsJointsPositionsMsg);
+        targetJointPositionPublisher.publish(targetJointPositionMessage);
 
 #ifdef VIZ_DEBUG
         targetMarkersPublisher.publish(marker);

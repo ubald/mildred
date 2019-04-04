@@ -14,6 +14,7 @@
 #include <kdl/frames.hpp>
 #include <kdl/chainiksolvervel_wdls.hpp>
 #include <kdl/chainfksolverpos_recursive.hpp>
+#include <kdl/chainiksolverpos_nr.hpp>
 #include <kdl/chainiksolverpos_nr_jl.hpp>
 
 //#include <control_toolbox/pid.h>
@@ -62,7 +63,7 @@ namespace Mildred {
          */
         bool setup(std::shared_ptr<urdf::Model> model, std::unique_ptr<KDL::Chain> chain, std::string tip);
 
-        void setJointState(const sensor_msgs::JointState::ConstPtr& jointState);
+        void setJointState(const sensor_msgs::JointState::ConstPtr &jointState);
 
         /**
          * Set the current gait the leg will use when walking.
@@ -87,13 +88,14 @@ namespace Mildred {
         //control_toolbox::Pid pidZ;
 
     private:
-        bool                                             init_run;
-        unsigned int                                     jointCount;
-        KDL::JntArray                                    q_init;
-        KDL::JntArray                                    q_out;
-        std::unique_ptr<KDL::ChainFkSolverPos_recursive> fk_solver{nullptr};
-        std::unique_ptr<KDL::ChainIkSolverVel_wdls>      ik_solver_vel{nullptr};
-        std::unique_ptr<KDL::ChainIkSolverPos_NR_JL>     ik_solver_pos{nullptr};
+        bool                                   init_run;
+        unsigned int                           jointCount;
+        std::unique_ptr<KDL::Chain> chain;
+        KDL::JntArray                          q_init;
+        KDL::JntArray                          q_out;
+        std::unique_ptr<KDL::ChainFkSolverPos> fk_solver{nullptr};
+        std::unique_ptr<KDL::ChainIkSolverVel_wdls> ik_solver_vel{nullptr};
+        std::unique_ptr<KDL::ChainIkSolverPos> ik_solver_pos{nullptr};
     };
 
 }

@@ -6,7 +6,7 @@ namespace Mildred {
         cycleTimeMultiplier = 2.500;
         stepLength          = 0.100; // Length of a step
         stepHeight          = 0.075; // Height of a step
-        bodyHeight          = 0.060; // Body height
+        bodyHeight          = 0.100; // Body height
         radius              = 0.125;
     }
 

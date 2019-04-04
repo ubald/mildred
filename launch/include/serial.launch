@@ -1,5 +1,0 @@
-<launch>
-    <param name="~port" value="/dev/ttyACM0"/>
-    <param name="~baud" value="57600"/>
-    <node name="rosserial_server" pkg="rosserial_server" type="serial_node" />
-</launch>

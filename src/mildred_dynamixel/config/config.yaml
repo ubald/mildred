@@ -8,74 +8,83 @@ common:
   Profile_Velocity: 0
   Profile_Acceleration: 0
 joints:
-  TC_joint_0:
+  # Right
+
+  TC_joint_0: # Front-right
     ID: 1
-    Min_Position_Limit: 1140
-    Max_Position_Limit: 2980
+    Min_Position_Limit: 1210 # Backward
+    Max_Position_Limit: 2960 # Forward
   CF_joint_0:
-    ID: 3
-    Min_Position_Limit: 80
-    Max_Position_Limit: 3260
-  FT_joint_0:
     ID: 2
-    Min_Position_Limit: 0
-    Max_Position_Limit: 3350
+    Min_Position_Limit: 860 # Over
+    Max_Position_Limit: 3980 # Under
+  FT_joint_0:
+    ID: 3
+    Min_Position_Limit: 760 # Close
+    Max_Position_Limit: 4095 # Extended
+
   TC_joint_1:
     ID: 4
-    Min_Position_Limit: 1140
-    Max_Position_Limit: 2980
+    Min_Position_Limit: 1210
+    Max_Position_Limit: 2960
   CF_joint_1:
     ID: 5
-    Min_Position_Limit: 80
-    Max_Position_Limit: 3260
+    Min_Position_Limit: 860
+    Max_Position_Limit: 3980
   FT_joint_1:
     ID: 6
-    Min_Position_Limit: 0
-    Max_Position_Limit: 3350
+    Min_Position_Limit: 760
+    Max_Position_Limit: 4095
+
   TC_joint_2:
     ID: 7
-    Min_Position_Limit: 1140
-    Max_Position_Limit: 2980
+    Min_Position_Limit: 1210
+    Max_Position_Limit: 2960
   CF_joint_2:
     ID: 8
-    Min_Position_Limit: 80
-    Max_Position_Limit: 3260
+    Min_Position_Limit: 860
+    Max_Position_Limit: 3980
   FT_joint_2:
     ID: 9
-    Min_Position_Limit: 0
-    Max_Position_Limit: 3350
+    Min_Position_Limit: 760
+    Max_Position_Limit: 4095
+
+  # Left
+
   TC_joint_3:
     ID: 10
-    Min_Position_Limit: 1140
-    Max_Position_Limit: 2980
+    Min_Position_Limit: 1140 # Forward
+    Max_Position_Limit: 2880 # Backwards
   CF_joint_3:
     ID: 11
-    Min_Position_Limit: 80
-    Max_Position_Limit: 3260
+    Min_Position_Limit: 80 # Under
+    Max_Position_Limit: 3250 # Over
   FT_joint_3:
     ID: 12
-    Min_Position_Limit: 0
-    Max_Position_Limit: 3350
+    Min_Position_Limit: 0 # Extended
+    Max_Position_Limit: 3350 # Close
+
   TC_joint_4:
     ID: 13
     Min_Position_Limit: 1140
-    Max_Position_Limit: 2980
+    Max_Position_Limit: 2880
   CF_joint_4:
     ID: 14
     Min_Position_Limit: 80
-    Max_Position_Limit: 3260
+    Max_Position_Limit: 3250
   FT_joint_4:
     ID: 15
     Min_Position_Limit: 0
     Max_Position_Limit: 3350
+
   TC_joint_5:
     ID: 16
     Min_Position_Limit: 1140
-    Max_Position_Limit: 2980
+    Max_Position_Limit: 2880
   CF_joint_5:
     ID: 17
     Min_Position_Limit: 80
-    Max_Position_Limit: 3260
+    Max_Position_Limit: 3250
   FT_joint_5:
     ID: 18
     Min_Position_Limit: 0

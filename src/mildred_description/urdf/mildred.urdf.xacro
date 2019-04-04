@@ -38,7 +38,7 @@
     </gazebo>
 
     <!-- Leg Macro -->
-    <xacro:macro name="leg" params="suffix angle x y">
+    <xacro:macro name="leg" params="suffix angle x y mirror">
 
         <!-- Link 0/Body->Leg -->
         <!--<joint name="leg_joint_${suffix}" type="fixed">-->
@@ -105,8 +105,8 @@
         <joint name="CF_joint_${suffix}" type="revolute">
             <parent link="coxa_${suffix}"/>
             <child link="femur_${suffix}"/>
-            <origin xyz="${coxa_length} 0.00 0.00" rpy="0.00 0.00 0.00"/>
-            <axis xyz="0.00 -1.00 0.00"/>
+            <origin xyz="${coxa_length} 0.00 0.00" rpy="0.00 ${-radians(femur_angle)} 0.00"/>
+            <axis xyz="0.00 ${mirror * -1.00} 0.00"/>
             <limit lower="${CF_joint_lower_limit}" upper="${CF_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}"/>
             <dynamics damping="${damping}" friction="${friction}" />
         </joint>
@@ -138,8 +138,8 @@
         <joint name="FT_joint_${suffix}" type="revolute">
             <parent link="femur_${suffix}"/>
             <child link="tibia_${suffix}"/>
-            <origin xyz="${femur_length} 0.00 0.00" rpy="0.00 0.00 0.00"/>
-            <axis xyz="0.00 1.00 0.00"/>
+            <origin xyz="${femur_length} 0.00 0.00" rpy="0.00 ${radians(45 + tibia_angle)}  0.00"/>
+            <axis xyz="0.00 ${mirror * 1.00} 0.00"/>
             <limit lower="${FT_joint_lower_limit}" upper="${FT_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}"/>
             <dynamics damping="${damping}" friction="${friction}" />
         </joint>
@@ -237,13 +237,13 @@
 
     </xacro:macro>
 
-    <xacro:leg suffix="0" x="0.050" y="0.065" angle="${radians(leg_angle)}"/>
-    <xacro:leg suffix="1" x="0.064" y="0.00" angle="${radians(0)}"/>
-    <xacro:leg suffix="2" x="0.050" y="-0.065" angle="${radians(-leg_angle)}"/>
+    <xacro:leg suffix="0" x="${corner_x}" y="${corner_y}" angle="${radians(leg_angle)}" mirror="-1"/>
+    <xacro:leg suffix="1" x="${center_x}" y="0.00" angle="${radians(0)}" mirror="-1"/>
+    <xacro:leg suffix="2" x="${corner_x}" y="-${corner_y}" angle="${radians(-leg_angle)}" mirror="-1"/>
 
-    <xacro:leg suffix="3" x="-0.050" y="0.065" angle="${radians(180 - leg_angle)}"/>
-    <xacro:leg suffix="4" x="-0.064" y="0.00" angle="${radians(180)}"/>
-    <xacro:leg suffix="5" x="-0.050" y="-0.065" angle="${radians(180 + leg_angle)}"/>
+    <xacro:leg suffix="3" x="-${corner_x}" y="-${corner_y}" angle="${radians(180 + leg_angle)}" mirror="1"/>
+    <xacro:leg suffix="4" x="-${center_x}" y="0.00" angle="${radians(180)}" mirror="1"/>
+    <xacro:leg suffix="5" x="-${corner_x}" y="${corner_y}" angle="${radians(180 - leg_angle)}" mirror="1"/>
 
     <gazebo>
         <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
