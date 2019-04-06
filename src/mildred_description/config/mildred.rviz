@@ -4,6 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Effort1
         - /RobotModel1/Links1
         - /Marker1
       Splitter Ratio: 0.5404762029647827
@@ -155,18 +156,54 @@ Visualization Manager:
       Update Interval: 0
       Value: true
     - Alpha: 1
+      CF_joint_0:
+        Value: true
+      CF_joint_1:
+        Value: true
+      CF_joint_2:
+        Value: true
+      CF_joint_3:
+        Value: true
+      CF_joint_4:
+        Value: true
+      CF_joint_5:
+        Value: true
       Class: rviz/Effort
-      Enabled: false
+      Enabled: true
+      FT_joint_0:
+        Value: true
+      FT_joint_1:
+        Value: true
+      FT_joint_2:
+        Value: true
+      FT_joint_3:
+        Value: true
+      FT_joint_4:
+        Value: true
+      FT_joint_5:
+        Value: true
       History Length: 1
       Joints:
         {}
       Name: Effort
       Robot Description: robot_description
       Scale: 0.009999999776482582
+      TC_joint_0:
+        Value: true
+      TC_joint_1:
+        Value: true
+      TC_joint_2:
+        Value: true
+      TC_joint_3:
+        Value: true
+      TC_joint_4:
+        Value: true
+      TC_joint_5:
+        Value: true
       TF Prefix: ""
       Topic: /mildred/joint_states
       Unreliable: false
-      Value: false
+      Value: true
       Width: 0.004999999888241291
     - Alpha: 1
       Class: rviz/RobotModel
@@ -186,10 +223,10 @@ Visualization Manager:
       Visual Enabled: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: visualization_marker
+      Marker Topic: /mildred/visualization_marker
       Name: Marker
       Namespaces:
-        mildred: true
+        /mildred: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -217,7 +254,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.8087087869644165
+      Distance: 1.7877975702285767
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -232,10 +269,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6897960305213928
+      Pitch: 0.6097961068153381
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.108565330505371
+      Yaw: 4.683561325073242
     Saved: ~
 Window Geometry:
   Displays:
@@ -253,5 +290,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1238
-  X: 117
-  Y: 644
+  X: 1520
+  Y: 709

@@ -21,6 +21,9 @@ namespace Mildred {
         virtual void prepare(double speed, double direction);
         virtual KDL::Vector walk(Mildred::GaitConfig &legGait);
 
+        double getSpeed() const { return speed; }
+        double getDirection() const { return direction; }
+
     protected:
         explicit Gait(Mildred::EGaitSequence sequence);
         //virtual ~Gait();

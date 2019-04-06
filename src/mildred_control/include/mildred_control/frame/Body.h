@@ -8,7 +8,6 @@
 #include <kdl_parser/kdl_parser.hpp>
 #include <kdl/tree.hpp>
 
-#include <mildred_core/mildred.h>
 #include <mildred_control/gait/gaits.h>
 
 #include "Leg.h"
@@ -19,7 +18,7 @@ namespace Mildred {
         Body();
         ~Body() = default;
 
-        bool setup(std::shared_ptr<urdf::Model> model, std::string legTipPrefix);
+        bool setup(std::shared_ptr<urdf::Model> model, uint8_t legCount, std::string legTipPrefix);
         void setJointState(const sensor_msgs::JointState::ConstPtr& jointState);
         void setGait(Mildred::EGaitShape shape, Mildred::EGaitSequence sequence);
 

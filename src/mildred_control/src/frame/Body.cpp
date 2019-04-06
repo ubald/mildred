@@ -3,7 +3,7 @@
 namespace Mildred {
     Body::Body() {}
 
-    bool Body::setup(std::shared_ptr<urdf::Model> model, std::string legTipPrefix) {
+    bool Body::setup(std::shared_ptr<urdf::Model> model, uint8_t legCount, std::string legTipPrefix) {
         auto tree = std::make_unique<KDL::Tree>();
         if (!kdl_parser::treeFromUrdfModel(*model, *tree)) {
             ROS_ERROR("Body::setup() Failed to initialize tree object");
@@ -11,7 +11,7 @@ namespace Mildred {
         }
 
         //Assign chains to legs
-        for (unsigned int i = 0; i < LEG_COUNT; ++i) {
+        for (unsigned int i = 0; i < legCount; ++i) {
             std::string tipName = legTipPrefix + "_" + std::to_string(i);
 
             auto chain = std::make_unique<KDL::Chain>();
@@ -69,15 +69,8 @@ namespace Mildred {
     }
 
     void Body::tick() {
-        KDL::Vector gaitStep;
-        KDL::Vector positionInBody;
-
-        /**
-         * Compute speed from velocity vector
-         *
-         * A check is first made to see if an axis' value is 0.00 because the Norm()
-         * method doesn't check that and returns NaN.
-         */
+        // A check is first made to see if an axis' value is 0.00 because the Norm()
+        // method doesn't check that and returns NaN.
         if (velocity.x() == 0.00) {
             speed = fabs(velocity.y());
         } else if (velocity.y() == 0.00) {
@@ -86,37 +79,23 @@ namespace Mildred {
             speed = fabs(velocity.Norm());
         }
 
-        /**
-         * fmin to 1.0 because the PS3 remote doesn't go in a circle
-         * but rather in a square with rounded corners at about x=0.9, y=0.9
-         */
+        // fmin to 1.0 because the PS3 remote doesn't go in a circle
+        // but rather in a square with rounded corners at about x=0.9, y=0.9
         speed = fmin(speed, 1.00);
-
-        /**
-         * Compute direction from velocity vector
-         */
         direction = atan2(velocity.y(), velocity.x());
 
         ROS_DEBUG("Speed: %f Direction: %f", speed, direction);
 
-        /**
-         * Prepare the gait with speed and direction as these values need not to be
-         * computed for each legs as they stay the same.
-         */
         gait->prepare(speed, direction);
 
         /**
          * Compute Gait and IK on each leg
          */
         for (const auto &leg:legs) {
-            //Get leg gait position
-            gaitStep = leg->doGait();
-
-            //Compose body position/rotation with the target foot position
-            positionInBody = frame * gaitStep;
-
-            //Do leg IK on this final position
-            leg->doIK(positionInBody);
+            //KDL::Vector gaitStep = leg->doGait();
+            //KDL::Vector positionInBody = /*frame **/ gaitStep;
+            leg->doIK(KDL::Vector(1.0*velocity.x(),1.0*velocity.y(), -0.1f));
+            //break;
         }
     }
 }

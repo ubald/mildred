@@ -1,20 +1,12 @@
 #pragma once
 
-#include <vector>
-
 #include <ros/ros.h>
 
-#include <sensor_msgs/Joy.h>
-#include <sensor_msgs/JoyFeedback.h>
-#include <sensor_msgs/JoyFeedbackArray.h>
-
 #include "mildred_core/RemoteControlMessage.h"
+#include "mildred_teleop/MildredTeleopJoy.h"
 
-// note on plain values:
+// BUTTONS
 // buttons are either 0 or 1
-// button axes go from 0 to -1
-// stick axes go from 0 to +/-1
-
 #define PS3_BUTTON_COUNT                 17
 
 #define PS3_BUTTON_SELECT                0
@@ -35,7 +27,9 @@
 #define PS3_BUTTON_ACTION_SQUARE         15
 #define PS3_BUTTON_PAIRING               16
 
-
+// AXES
+// stick axes go from 0 to +/-1
+// button axes go from 0 to -1
 #define PS3_AXIS_COUNT                   20
 
 #define PS3_AXIS_STICK_LEFT_LEFTWARDS    0
@@ -59,6 +53,7 @@
 #define PS3_AXIS_ACCELEROMETER_UP        18
 #define PS3_AXIS_GYRO_YAW                19
 
+// LEDS
 #define PS3_LED_COUNT                    4
 
 #define PS3_LED_1                        0
@@ -66,18 +61,13 @@
 #define PS3_LED_3                        2
 #define PS3_LED_4                        3
 
-std::vector<bool> lastButtonValue(PS3_BUTTON_COUNT);
-std::vector<float> lastAxisValue(PS3_AXIS_COUNT);
-std::vector<bool> axisChanged(PS3_AXIS_COUNT);
+namespace Mildred {
 
-//std::vector<bool> buttonState (15);
-
-ros::Subscriber joySubscriber;
-
-ros::Publisher joyFeedbackPublisher;
-ros::Publisher controlPublisher;
-
-mildred_core::RemoteControlMessage control;
-
-int main( int argc, char **argv );
-void joyCallback( sensor_msgs::Joy joyMsg );
+    class MildredTeleopJoyPS3: public MildredTeleopJoy {
+    public:
+        MildredTeleopJoyPS3();
+        ~MildredTeleopJoyPS3() = default;
+    protected:
+        void joyCallback(sensor_msgs::Joy joyMsg) override;
+    };
+}

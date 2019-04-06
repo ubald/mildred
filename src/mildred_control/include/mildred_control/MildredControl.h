@@ -11,6 +11,7 @@
 #include <geometry_msgs/Point.h>
 #include <visualization_msgs/Marker.h>
 
+#include <mildred_core/mildred.h>
 #include <mildred_core/RemoteControlMessage.h>
 
 #include "frame/Body.h"

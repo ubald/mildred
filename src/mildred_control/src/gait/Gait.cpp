@@ -50,11 +50,8 @@ namespace Mildred {
         speed     = in_speed;
         direction = in_direction;
 
-        //Current time
         double now = ros::Time::now().sec + (ros::Time::now().nsec * 1e-9);
-        //Delta time since last gait
         double dt  = now - lastTime;
-        //Copy now to last time
         lastTime = now;
 
         //Find where we are in our cycle depending on speed

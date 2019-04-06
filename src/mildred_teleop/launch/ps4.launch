@@ -1,4 +1,4 @@
 <launch>
-    <node name="joystick_driver" pkg="joy" type="joy_node" respawn="true" />
-    <node name="mildred_teleop" pkg="mildred_teleop" type="mildred_teleop_ps3" respawn="true" />
+    <node name="joystick_driver" pkg="joy" type="joy_node" respawn="true" output="screen"/>
+    <node ns="mildred" name="mildred_teleop" pkg="mildred_teleop" type="mildred_teleop_ps3" respawn="true" output="screen"/>
 </launch>

@@ -7,7 +7,7 @@ using namespace Mildred;
 int main(int argc, char **argv) {
     ros::init(argc, argv, "mildred_control");
     ros::start();
-    ros::Rate rate(150);
+    ros::Rate rate(100);
 
     auto mildredControl = std::make_unique<MildredControl>();
     if (!mildredControl->init()) {

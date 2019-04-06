@@ -5,6 +5,7 @@
       <w>dynamixel</w>
       <w>dynamixels</w>
       <w>revolute</w>
+      <w>teleop</w>
     </words>
   </dictionary>
 </component>

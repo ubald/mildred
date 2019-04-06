@@ -19,6 +19,7 @@
 
 //#include <control_toolbox/pid.h>
 
+#include <mildred_core/mildred.h>
 #include <mildred_control/gait/Gait.h>
 //#include "mildred_control/ik/UChainIkSolverPosNRJL.h"
 
@@ -73,10 +74,9 @@ namespace Mildred {
         void setGait(std::shared_ptr<Mildred::Gait> gait);
 
 
-        KDL::Vector               targetPosition;
-        KDL::Frame                frame;
-        static const unsigned int JOINT_COUNT = 3;
-        Mildred::Joint            joints[JOINT_COUNT];
+        KDL::Vector    targetPosition;
+        KDL::Frame     frame;
+        Mildred::Joint joints[DOF];
         KDL::Vector doGait();
         bool doIK(KDL::Vector target);
 
@@ -88,14 +88,16 @@ namespace Mildred {
         //control_toolbox::Pid pidZ;
 
     private:
-        bool                                   init_run;
-        unsigned int                           jointCount;
-        std::unique_ptr<KDL::Chain> chain;
-        KDL::JntArray                          q_init;
-        KDL::JntArray                          q_out;
-        std::unique_ptr<KDL::ChainFkSolverPos> fk_solver{nullptr};
+        bool                                        init_run;
+        unsigned int                                jointCount;
+        std::unique_ptr<KDL::Chain>                 chain;
+        KDL::JntArray                               jointMinimums;
+        KDL::JntArray                               jointMaximums;
+        KDL::JntArray                               q_init;
+        KDL::JntArray                               q_out;
+        std::unique_ptr<KDL::ChainFkSolverPos>      fk_solver{nullptr};
         std::unique_ptr<KDL::ChainIkSolverVel_wdls> ik_solver_vel{nullptr};
-        std::unique_ptr<KDL::ChainIkSolverPos> ik_solver_pos{nullptr};
+        std::unique_ptr<KDL::ChainIkSolverPos>      ik_solver_pos{nullptr};
     };
 
 }
