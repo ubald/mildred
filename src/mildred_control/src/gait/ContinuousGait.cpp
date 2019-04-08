@@ -4,10 +4,10 @@ namespace Mildred {
     ContinuousGait::ContinuousGait(Mildred::EGaitSequence sequence) :
         Gait::Gait(sequence) {
         cycleTimeMultiplier = 2.500;
-        stepLength          = 0.100; // Length of a step
-        stepHeight          = 0.075; // Height of a step
-        bodyHeight          = 0.100; // Body height
-        radius              = 0.125;
+        stepLength          = 0.100;
+        stepHeight          = 0.075;
+        bodyHeight          = 0.100;
+        radius              = 0.2;
     }
 
     void ContinuousGait::setup() {
@@ -18,11 +18,11 @@ namespace Mildred {
         double stanceDuration = 1 - flightTime;
 
         if (cyclePosition <= stanceDuration) {
-            //Stance
+            // Stance
             posx = (stepLength * (cyclePosition / stanceDuration)) - (stepLength / 2);
             posz = -bodyHeight;
         } else {
-            //Flight
+            // Flight
             double pos = (cyclePosition - stanceDuration) / (1 - stanceDuration);
             posx = cos(pos * M_PI) * (stepLength / 2);
             posz = (sin(pos * M_PI) * stepHeight) - bodyHeight;

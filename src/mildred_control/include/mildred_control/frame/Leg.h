@@ -15,13 +15,11 @@
 #include <kdl/chainiksolvervel_wdls.hpp>
 #include <kdl/chainfksolverpos_recursive.hpp>
 #include <kdl/chainiksolverpos_nr.hpp>
-#include <kdl/chainiksolverpos_nr_jl.hpp>
-
-//#include <control_toolbox/pid.h>
+//#include <kdl/chainiksolverpos_nr_jl.hpp>
 
 #include <mildred_core/mildred.h>
 #include <mildred_control/gait/Gait.h>
-//#include "mildred_control/ik/UChainIkSolverPosNRJL.h"
+#include "mildred_control/ik/UChainIkSolverPosNRJL.h"
 
 #include "Joint.h"
 
@@ -82,14 +80,9 @@ namespace Mildred {
 
     protected:
         std::shared_ptr<Mildred::Gait> currentGait{nullptr};
-        //double               lastPIDTime;
-        //control_toolbox::Pid pidX;
-        //control_toolbox::Pid pidY;
-        //control_toolbox::Pid pidZ;
 
     private:
-        bool                                        init_run;
-        unsigned int                                jointCount;
+        uint8_t                                     jointCount;
         std::unique_ptr<KDL::Chain>                 chain;
         KDL::JntArray                               jointMinimums;
         KDL::JntArray                               jointMaximums;

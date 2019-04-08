@@ -11,7 +11,10 @@ namespace Mildred {
     bool Leg::setup(std::shared_ptr<urdf::Model> model, std::unique_ptr<KDL::Chain> legChain, std::string tip) {
         chain = std::move(legChain);
 
-        ROS_INFO("Setting up leg %s starting at %s", name.c_str(), chain->segments[0].getName().c_str());
+        ROS_INFO("Setting up leg \"%s\" with tip \"%s\"", name.c_str(), tip.c_str());
+        for (const auto &segment:chain->segments) {
+            ROS_INFO_STREAM("  - " << segment.getJoint().getName() << "(" << segment.getJoint().getTypeName() << ")" << " > " << segment.getName());
+        }
 
         // Compose root frame and leg/hip frame
         // This is highly dependent on our specific URDF model design
@@ -20,7 +23,7 @@ namespace Mildred {
         // Gait configuration
         double r, p, y;
         frame.M.GetRPY(r, p, y);
-        ROS_INFO("    Alpha: %f", y);
+        ROS_INFO("  Alpha: %f", y);
         gaitConfig.alpha = y;
 
         //Initialize the total number of joints
@@ -48,10 +51,12 @@ namespace Mildred {
         while (modelLink && modelLink->parent_joint) {
             const auto modelJoint = modelLink->parent_joint;
             if (modelJoint->type != urdf::Joint::UNKNOWN && modelJoint->type != urdf::Joint::FIXED) {
-                ROS_INFO("Getting bounds for joint: %s", modelJoint->name.c_str());
+                unsigned int index = jointCount - i - 1;
+                ROS_INFO("Getting bounds for joint %d: %s", index, modelJoint->name.c_str());
 
                 //Save name to our joint object
-                joints[i].name = modelJoint->name;
+                joints[index].name = modelJoint->name;
+                joints[index].targetPosition = 0.00f;
 
                 //Get limits
                 double lower, upper;
@@ -63,10 +68,11 @@ namespace Mildred {
                     upper = M_PI;
                 }
 
-                int index = jointCount - i - 1;
-                jointMinimums.data[index] = lower;
-                jointMaximums.data[index] = upper;
-                joints[index].targetPosition = 0.00f;
+                ROS_INFO_STREAM("  - Lower: " << lower);
+                ROS_INFO_STREAM("  - Upper: " << upper);
+
+                jointMinimums(index) = lower;
+                jointMaximums(index) = upper;
                 i++;
             }
 
@@ -77,17 +83,15 @@ namespace Mildred {
         fk_solver     = std::make_unique<KDL::ChainFkSolverPos_recursive>(*chain);
         ik_solver_vel = std::make_unique<KDL::ChainIkSolverVel_wdls>(*chain);
 
-        //Only the end effector position is needed - Task Space
-        //NOTE: I don't know the fuck this does but without it it can't solve...
+        // Only the end effector position is needed, we do not care about it's rotation
         Eigen::MatrixXd matrix_Mx = Eigen::MatrixXd::Identity(6, 6);
         matrix_Mx(3, 3) = 0;
         matrix_Mx(4, 4) = 0;
         matrix_Mx(5, 5) = 0;
         ik_solver_vel->setWeightTS(matrix_Mx);
-        //ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR_JL>(*chain, jointMinimums, jointMaximums, *fk_solver, *ik_solver_vel, 1000, 0.01f);
-        ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR>(*chain, *fk_solver, *ik_solver_vel, 1000, 0.01f);
+        ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR_JL>(*chain, jointMinimums, jointMaximums, *fk_solver, *ik_solver_vel, 1000, 0.001f);
+        //ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR>(*chain, *fk_solver, *ik_solver_vel, 1000, 0.01f);
 
-        //Resize our q_init array
         q_init.resize(jointCount);
         q_out.resize(jointCount);
 
@@ -107,51 +111,37 @@ namespace Mildred {
     KDL::Vector Leg::doGait() {
         KDL::Vector gaitTargetPosition = currentGait->walk(gaitConfig);
         KDL::Vector positionInLegFrame = frame * gaitTargetPosition;
-        //TODO Other leg-position-specific shit here, ground contact, behavior whatever
-
-        //Return final target position
         return positionInLegFrame;
     }
 
     bool Leg::doIK(KDL::Vector target) {
         targetPosition = target;
 
-        //Save the target position
-        //double        now = ros::Time::now().sec + (ros::Time::now().nsec * 1e-9);
-        //ros::Duration d   = ros::Duration(now - lastPIDTime);
-        //targetPosition = KDL::Vector(
-        //    pidX.updatePid(targetPosition.x() - target.x(), d),
-        //    pidY.updatePid(targetPosition.y() - target.y(), d),
-        //    pidZ.updatePid(targetPosition.z() - target.z(), d)
-        //);
-        //targetPosition = target;
-        ROS_ERROR_STREAM("x:" << target.x() << " y:" << target.y() << " z:" << target.z());
-        //lastPIDTime    = now;
-
         //Get the current joint positions (our array is base->tip, IK works with tip->base)
+        std::string debug;
         for (unsigned int i = 0; i < DOF; i++) {
+            debug += std::to_string(i) + ": " + std::to_string(joints[i].currentPosition) + " ";
             q_init((DOF - 1) - i) = joints[i].currentPosition;
+            //q_init(i) = joints[i].currentPosition;
         }
-
-        ROS_DEBUG_STREAM_NAMED("kdl", "Input: " << &q_init);
+        ROS_DEBUG_STREAM(" -  CJP: " << debug);
 
         int ik_valid = ik_solver_pos->CartToJnt(q_init, KDL::Frame(target), q_out);
+
         // Only when a solution is found it will be sent
         if (ik_valid >= 0) {
-            ROS_INFO("VALID!!!");
-            init_run            = false;
             for (unsigned int i = 0; i < jointCount; i++) {
-                joints[i].targetPosition = q_out(i);
+                joints[i].targetPosition = q_out((DOF - 1) - i);
+                //joints[i].targetPosition = q_out(i);
             }
         } else {
             ROS_WARN("Leg::doIK() IK Solution not found for : %s, error: %d", name.c_str(), ik_valid);
             ROS_DEBUG("Leg::doIK() IK POS: %f %f %f", target.x(), target.y(), target.z());
             ROS_DEBUG("Leg::doIK() Q_OUT: %f %f %f", q_out(0), q_out(1), q_out(2));
-            init_run = true;
 
-            for (unsigned int i = 0; i < jointCount; i++) {
-                joints[i].targetPosition = q_out(i);
-            }
+            //for (unsigned int i = 0; i < jointCount; i++) {
+            //    joints[i].targetPosition = q_out(i);
+            //}
         }
 
         return (ik_valid >= 0);

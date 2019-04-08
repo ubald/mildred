@@ -9,7 +9,7 @@
     <xacro:include filename="$(find mildred_description)/urdf/macros.xacro" />
 
     <link name="base_link"/>
-    <joint name="thorax_to_base" type="fixed">
+    <joint name="base_to_thorax" type="fixed">
         <parent link="base_link"/>
         <child link="thorax"/>
         <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 0.00"/>
@@ -39,34 +39,6 @@
 
     <!-- Leg Macro -->
     <xacro:macro name="leg" params="suffix angle x y mirror">
-
-        <!-- Link 0/Body->Leg -->
-        <!--<joint name="leg_joint_${suffix}" type="fixed">-->
-            <!--<parent link="thorax"/>-->
-            <!--<child link="leg_${suffix}"/>-->
-            <!--<origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 ${angle}"/>-->
-        <!--</joint>-->
-        <!--<link name="leg_${suffix}">-->
-            <!--<visual>-->
-                <!--<origin xyz="${thorax_radius/2} 0.000 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
-                <!--<geometry>-->
-                    <!--<cylinder radius="0.005" length="${thorax_radius}"/>-->
-                <!--</geometry>-->
-                <!--<material name="blue">-->
-                    <!--<color rgba="0 0 255 1"/>-->
-                <!--</material>-->
-            <!--</visual>-->
-            <!--<collision>-->
-                <!--<origin xyz="${thorax_radius/2} 0.000 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
-                <!--<geometry>-->
-                    <!--<cylinder radius="0.005" length="${thorax_radius}"/>-->
-                <!--</geometry>-->
-            <!--</collision>-->
-            <!--<xacro:cylinder_inertial mass="0.01" radius="0.005" length="${thorax_radius}"/>-->
-        <!--</link>-->
-        <!--<gazebo reference="leg_${suffix}">-->
-            <!--<material>Gazebo/Blue</material>-->
-        <!--</gazebo>-->
 
         <!-- Link 1/Coxa -->
         <joint name="TC_joint_${suffix}" type="revolute">

@@ -21,11 +21,10 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-#ifndef KDL_CHAINIKSOLVERPOS_NR_JL_HPP
-#define KDL_CHAINIKSOLVERPOS_NR_JL_HPP
+#pragma once
 
-#include <kdl/chainiksolver.hpp>
-#include <kdl/chainfksolver.hpp>
+#include "kdl/chainiksolver.hpp"
+#include "kdl/chainfksolver.hpp"
 
 namespace KDL {
 
@@ -37,17 +36,20 @@ namespace KDL {
      *
      * @ingroup KinematicFamily
      */
-    class UChainIkSolverPos_NR_JL : public ChainIkSolverPos
-    {
+    class ChainIkSolverPos_NR_JL : public ChainIkSolverPos {
     public:
+
+        static const int E_IKSOLVERVEL_FAILED = -100; //! Child IK solver vel failed
+        static const int E_FKSOLVERPOS_FAILED = -101; //! Child FK solver failed
+
         /**
          * Constructor of the solver, it needs the chain, a forward
          * position kinematics solver and an inverse velocity
          * kinematics solver for that chain.
          *
          * @param chain the chain to calculate the inverse position for
-         * @param q_max the maximum joint positions
          * @param q_min the minimum joint positions
+         * @param q_max the maximum joint positions
          * @param fksolver a forward position kinematics solver
          * @param iksolver an inverse velocity kinematics solver
          * @param maxiter the maximum Newton-Raphson iterations,
@@ -57,25 +59,67 @@ namespace KDL {
          *
          * @return
          */
-        UChainIkSolverPos_NR_JL(const Chain& chain,const JntArray& q_min, const JntArray& q_max, ChainFkSolverPos& fksolver,ChainIkSolverVel& iksolver,unsigned int maxiter=100,double eps=1e-6);
-        ~UChainIkSolverPos_NR_JL();
+        ChainIkSolverPos_NR_JL(const Chain &chain, const JntArray &q_min, const JntArray &q_max, ChainFkSolverPos &fksolver, ChainIkSolverVel &iksolver, unsigned int maxiter = 100, double eps = 1e-6);
 
-        virtual int CartToJnt(const JntArray& q_init, const Frame& p_in, JntArray& q_out);
+        /**
+         * Constructor of the solver, it needs the chain, a forward
+         * position kinematics solver and an inverse velocity
+         * kinematics solver for that chain.
+         *
+         * @param chain the chain to calculate the inverse position for
+         * @param fksolver a forward position kinematics solver
+         * @param iksolver an inverse velocity kinematics solver
+         * @param maxiter the maximum Newton-Raphson iterations,
+         * default: 100
+         * @param eps the precision for the position, used to end the
+         * iterations, default: epsilon (defined in kdl.hpp)
+         *
+         * @return
+         */
+        ChainIkSolverPos_NR_JL(const Chain &chain, ChainFkSolverPos &fksolver, ChainIkSolverVel &iksolver, unsigned int maxiter = 100, double eps = 1e-6);
+
+        ~ChainIkSolverPos_NR_JL();
+
+
+        /**
+         * Calculates the joint values that correspond to the input pose given an initial guess.
+         * @param q_init Initial guess for the joint values.
+         * @param p_in The input pose of the chain tip.
+         * @param q_out The resulting output joint values
+         * @return E_MAX_ITERATIONS_EXCEEDED if the maximum number of iterations was exceeded before a result was found
+         *         E_NOT_UP_TO_DATE if the internal data is not up to date with the chain
+         *         E_SIZE_MISMATCH if the size of the input/output data does not match the chain.
+         */
+        virtual int CartToJnt(const JntArray &q_init, const Frame &p_in, JntArray &q_out);
+
+        /**
+         * Function to set the joint limits.
+         * @param q_min minimum values for the joints
+         * @param q_max maximum values for the joints
+         * @return E_SIZE_MISMATCH if input sizes do not match the chain
+         */
+        int setJointLimits(const JntArray &q_min, const JntArray &q_max);
+
+        /// @copydoc KDL::SolverI::updateInternalDataStructures
+        virtual void updateInternalDataStructures();
+
+        /// @copydoc KDL::SolverI::strError()
+        const char *strError(const int error) const;
 
     private:
-        const Chain chain;
-        JntArray q_min;
-        JntArray q_max;
-        ChainFkSolverPos& fksolver;
-        ChainIkSolverVel& iksolver;
-        JntArray delta_q;
+        const Chain &chain;
+        unsigned int nj;
+        JntArray     q_min;
+        JntArray     q_max;
+        ChainIkSolverVel &iksolver;
+        ChainFkSolverPos &fksolver;
+        JntArray     delta_q;
+        unsigned int maxiter;
+        double       eps;
+
         Frame f;
         Twist delta_twist;
 
-        unsigned int maxiter;
-        double eps;
     };
 
 }
-
-#endif

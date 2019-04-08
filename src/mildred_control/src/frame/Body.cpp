@@ -6,7 +6,7 @@ namespace Mildred {
     bool Body::setup(std::shared_ptr<urdf::Model> model, uint8_t legCount, std::string legTipPrefix) {
         auto tree = std::make_unique<KDL::Tree>();
         if (!kdl_parser::treeFromUrdfModel(*model, *tree)) {
-            ROS_ERROR("Body::setup() Failed to initialize tree object");
+            ROS_ERROR("Failed to initialize tree object");
             return false;
         }
 
@@ -15,9 +15,9 @@ namespace Mildred {
             std::string tipName = legTipPrefix + "_" + std::to_string(i);
 
             auto chain = std::make_unique<KDL::Chain>();
-            ROS_INFO("Getting chain from to %s", tipName.c_str());
+            ROS_INFO("Getting chain from \"base_link\" to \"%s\"", tipName.c_str());
             if (!tree->getChain("base_link", tipName, *chain)) {
-                ROS_ERROR("Failed to initialize chain to %s", tipName.c_str());
+                ROS_ERROR("Failed get chain from \"base_link\" to \"%s\"", tipName.c_str());
                 return false;
             }
 
@@ -92,10 +92,13 @@ namespace Mildred {
          * Compute Gait and IK on each leg
          */
         for (const auto &leg:legs) {
-            //KDL::Vector gaitStep = leg->doGait();
-            //KDL::Vector positionInBody = /*frame **/ gaitStep;
-            leg->doIK(KDL::Vector(1.0*velocity.x(),1.0*velocity.y(), -0.1f));
-            //break;
+            KDL::Vector gaitStep = leg->doGait();
+            KDL::Vector positionInBody = frame * gaitStep;
+            ROS_DEBUG_STREAM("Leg " << leg->name << ":");
+            ROS_DEBUG_STREAM(" - Gait: " << gaitStep.x() << ", " << gaitStep.y() << ", " << gaitStep.z());
+            ROS_DEBUG_STREAM(" - Body: " << positionInBody.x() << ", " << positionInBody.y() << ", " << positionInBody.z());
+            leg->doIK(positionInBody);
+            break;
         }
     }
 }
