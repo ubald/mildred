@@ -1,4 +1,20 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="default_inertial">
+        <inertial>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <mass value="0.00001"/>
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+        </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="default_inertial_mass" params="mass">
+        <inertial>
+            <mass value="${mass}"/>
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+        </inertial>
+    </xacro:macro>
+
     <!--<xacro:macro name="default_inertial" params="mass">-->
         <!--<inertial>-->
             <!--<mass value="${mass}"/>-->
@@ -66,14 +82,6 @@
                      <!--izz="${0.0833333 * mass * (x*x + y*y)}" />-->
         <!--</inertial>-->
     <!--</xacro:macro>-->
-
-    <xacro:macro name="default_inertial" params="mass">
-        <inertial>
-            <mass value="${mass}"/>
-            <!--<inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />-->
-            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-        </inertial>
-    </xacro:macro>
 
     <xacro:macro name="sphere_inertial" params="radius mass">
         <inertial>

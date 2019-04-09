@@ -98,7 +98,7 @@ namespace Mildred {
             ROS_DEBUG_STREAM(" - Gait: " << gaitStep.x() << ", " << gaitStep.y() << ", " << gaitStep.z());
             ROS_DEBUG_STREAM(" - Body: " << positionInBody.x() << ", " << positionInBody.y() << ", " << positionInBody.z());
             leg->doIK(positionInBody);
-            break;
+            //break;
         }
     }
 }

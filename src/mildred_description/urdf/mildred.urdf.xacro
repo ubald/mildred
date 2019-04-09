@@ -31,7 +31,8 @@
                 <cylinder radius="${thorax_radius}" length="${thorax_height}"/>
             </geometry>
         </collision>
-        <xacro:default_inertial mass="${thorax_mass}"/>
+        <xacro:default_inertial/>
+        <!--<xacro:default_inertial mass="${thorax_mass}"/>-->
     </link>
     <gazebo reference="thorax">
         <material>Gazebo/Yellow</material>
@@ -47,7 +48,7 @@
             <origin xyz="${x} ${y} 0.00" rpy="0.00 0.00 ${angle}"/>
             <axis xyz="0.00 0.00 1.00"/>
             <limit lower="${TC_joint_lower_limit}" upper="${TC_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}"/>
-            <dynamics damping="${damping}" friction="${friction}" />
+            <!--<dynamics damping="${damping}" friction="${friction}" />-->
         </joint>
         <link name="coxa_${suffix}">
             <visual>
@@ -65,22 +66,33 @@
                     <cylinder radius="0.02" length="${coxa_length}"/>
                 </geometry>
             </collision>
-            <xacro:cylinder_inertial_with_origin mass="${coxa_mass}" radius="0.02" length="${coxa_length}">
-                <origin xyz="${coxa_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>
-            </xacro:cylinder_inertial_with_origin>
+            <xacro:default_inertial/>
+            <!--<xacro:cylinder_inertial_with_origin mass="${coxa_mass}" radius="0.02" length="${coxa_length}">-->
+                <!--<origin xyz="${coxa_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
+            <!--</xacro:cylinder_inertial_with_origin>-->
         </link>
         <gazebo reference="coxa_${suffix}">
             <material>Gazebo/Blue</material>
         </gazebo>
+        <transmission name="TC_trans_${suffix}">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="TC_joint_${suffix}">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="TC_motor_${suffix}">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
 
         <!-- Link 2/Femur -->
         <joint name="CF_joint_${suffix}" type="revolute">
             <parent link="coxa_${suffix}"/>
             <child link="femur_${suffix}"/>
-            <origin xyz="${coxa_length} 0.00 0.00" rpy="0.00 ${-radians(femur_angle)} 0.00"/>
-            <axis xyz="0.00 ${mirror * -1.00} 0.00"/>
+            <origin xyz="${coxa_length} 0.00 0.00" rpy="0.00 0.00 0.00"/>
+            <axis xyz="0.00 1.00 0.00"/>
             <limit lower="${CF_joint_lower_limit}" upper="${CF_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}"/>
-            <dynamics damping="${damping}" friction="${friction}" />
+            <!--<dynamics damping="${damping}" friction="${friction}" />-->
         </joint>
         <link name="femur_${suffix}">
             <visual>
@@ -98,22 +110,33 @@
                     <cylinder radius="0.02" length="${femur_length}"/>
                 </geometry>
             </collision>
-            <xacro:cylinder_inertial_with_origin mass="${femur_mass}" radius="0.02" length="${femur_length}">
-                <origin xyz="${femur_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>
-            </xacro:cylinder_inertial_with_origin>
+            <xacro:default_inertial/>
+            <!--<xacro:cylinder_inertial_with_origin mass="${femur_mass}" radius="0.02" length="${femur_length}">-->
+                <!--<origin xyz="${femur_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
+            <!--</xacro:cylinder_inertial_with_origin>-->
         </link>
         <gazebo reference="femur_${suffix}">
             <material>Gazebo/Turquoise</material>
         </gazebo>
+        <transmission name="CF_trans_${suffix}">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="CF_joint_${suffix}">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="CF_motor_${suffix}">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
 
         <!-- Link 3/Tibia -->
         <joint name="FT_joint_${suffix}" type="revolute">
             <parent link="femur_${suffix}"/>
             <child link="tibia_${suffix}"/>
-            <origin xyz="${femur_length} 0.00 0.00" rpy="0.00 ${radians(45 + tibia_angle)}  0.00"/>
-            <axis xyz="0.00 ${mirror * 1.00} 0.00"/>
+            <origin xyz="${femur_length} 0.00 0.00" rpy="0.00 0.00 0.00"/>
+            <axis xyz="0.00 1.00 0.00"/>
             <limit lower="${FT_joint_lower_limit}" upper="${FT_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}"/>
-            <dynamics damping="${damping}" friction="${friction}" />
+            <!--<dynamics damping="${damping}" friction="${friction}" />-->
         </joint>
         <link name="tibia_${suffix}">
             <visual>
@@ -131,13 +154,24 @@
                     <cylinder radius="0.02" length="${tibia_length}"/>
                 </geometry>
             </collision>
-            <xacro:cylinder_inertial_with_origin mass="${tibia_mass}" radius="0.02" length="${tibia_length}">
-                <origin xyz="${tibia_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>
-            </xacro:cylinder_inertial_with_origin>
+            <xacro:default_inertial/>
+            <!--<xacro:cylinder_inertial_with_origin mass="${tibia_mass}" radius="0.02" length="${tibia_length}">-->
+                <!--<origin xyz="${tibia_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
+            <!--</xacro:cylinder_inertial_with_origin>-->
         </link>
         <gazebo reference="tibia_${suffix}">
             <material>Gazebo/Purple</material>
         </gazebo>
+        <transmission name="FT_trans_${suffix}">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="FT_joint_${suffix}">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="FT_motor_${suffix}">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
 
         <!-- Tip/Foot -->
         <joint name="foot_joint_${suffix}" type="fixed">
@@ -161,7 +195,8 @@
                     <sphere radius="${foot_radius}"/>
                 </geometry>
             </collision>
-            <xacro:sphere_inertial mass="${foot_mass}" radius="0.01"/>
+            <xacro:default_inertial/>
+            <!--<xacro:sphere_inertial mass="${foot_mass}" radius="0.01"/>-->
         </link>
         <gazebo reference="foot_frame_${suffix}">
             <material>Gazebo/Red</material>
@@ -171,41 +206,6 @@
             <!--<kd value="1.0"/>-->
             <!--<fdir1 value="1 0 0"/>-->
         </gazebo>
-
-        <!-- Transmissions -->
-
-        <transmission name="TC_trans_${suffix}">
-            <type>transmission_interface/SimpleTransmission</type>
-            <joint name="TC_joint_${suffix}">
-                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            </joint>
-            <actuator name="TC_motor_${suffix}">
-                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-                <mechanicalReduction>1</mechanicalReduction>
-            </actuator>
-        </transmission>
-
-        <transmission name="CF_trans_${suffix}">
-            <type>transmission_interface/SimpleTransmission</type>
-            <joint name="CF_joint_${suffix}">
-                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            </joint>
-            <actuator name="CF_motor_${suffix}">
-                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-                <mechanicalReduction>1</mechanicalReduction>
-            </actuator>
-        </transmission>
-
-        <transmission name="FT_trans_${suffix}">
-            <type>transmission_interface/SimpleTransmission</type>
-            <joint name="FT_joint_${suffix}">
-                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            </joint>
-            <actuator name="FT_motor_${suffix}">
-                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-                <mechanicalReduction>1</mechanicalReduction>
-            </actuator>
-        </transmission>
 
     </xacro:macro>
 

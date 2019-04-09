@@ -27,12 +27,12 @@
           args="joint_state_controller
                 joint_position_controller"/>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mildred_description)/config/mildred.rviz" output="screen" />
+    <!--<node name="rviz" pkg="rviz" type="rviz" args="-d $(find mildred_description)/config/mildred.rviz" output="screen" />-->
 
     <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-z 0.3 -urdf -param robot_description -model mildred" respawn="false" output="screen" />
 
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" respawn="false" output="screen">
-        <param name="publish_frequency" type="double" value="60" />
+        <param name="publish_frequency" type="double" value="100" />
         <remap from="/joint_states" to="/mildred/joint_states" />
     </node>
 </launch>

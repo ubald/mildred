@@ -30,20 +30,29 @@
     <!--<xacro:property name="foot_mass" value="1.0"/>-->
 
     <!-- http://emanual.robotis.com/docs/en/dxl/x/xl430-w250/#specifications -->
-    <xacro:property name="max_torque" value="100.4"/> <!-- this is stall torque, graph shows 0.84 -->
-    <xacro:property name="max_velocity" value="${((2*pi)/60)*57}"/> <!-- rpm to rad/s -->
+    <xacro:property name="max_torque" value="1.4"/> <!-- this is stall torque, graph shows 0.84 -->
+    <xacro:property name="max_velocity" value="${((2 * pi) / 60) * 57}"/> <!-- rpm to rad/s -->
     <!--<xacro:property name="max_torque" value="10000"/> &lt;!&ndash; fuck it, just move &ndash;&gt;-->
     <!--<xacro:property name="max_velocity" value="100"/> &lt;!&ndash; fuck it, just move &ndash;&gt;-->
 
     <!-- Joint Properties -->
-    <xacro:property name="TC_joint_lower_limit" value="-1.2"/> # Swapped per side
-    <xacro:property name="TC_joint_upper_limit" value="1.2"/>
+    <!--<xacro:property name="TC_joint_lower_limit" value="-1.2"/> # Swapped per side-->
+    <!--<xacro:property name="TC_joint_upper_limit" value="1.2"/>-->
 
-    <xacro:property name="CF_joint_lower_limit" value="-2.8"/> # Under, Inverted per side
-    <xacro:property name="CF_joint_upper_limit" value="1.8"/>
+    <!--<xacro:property name="CF_joint_lower_limit" value="-2.8"/> # Under, Inverted per side-->
+    <!--<xacro:property name="CF_joint_upper_limit" value="1.8"/>-->
 
-    <xacro:property name="FT_joint_lower_limit" value="-1.9"/>
-    <xacro:property name="FT_joint_upper_limit" value="3.7"/>
+    <!--<xacro:property name="FT_joint_lower_limit" value="-1.9"/>-->
+    <!--<xacro:property name="FT_joint_upper_limit" value="3.7"/>-->
+
+    <xacro:property name="TC_joint_lower_limit" value="-${3.14}"/>
+    <xacro:property name="TC_joint_upper_limit" value="${3.14}"/>
+
+    <xacro:property name="CF_joint_lower_limit" value="-${3.14}"/>
+    <xacro:property name="CF_joint_upper_limit" value="${3.14}"/>
+
+    <xacro:property name="FT_joint_lower_limit" value="-${3.14}"/>
+    <xacro:property name="FT_joint_upper_limit" value="${3.14}"/>
 
     <!--<xacro:property name="damping" value="0.7"/>-->
     <!--<xacro:property name="friction" value="100.0"/>-->

@@ -82,6 +82,7 @@ namespace Mildred {
         std::shared_ptr<Mildred::Gait> currentGait{nullptr};
 
     private:
+        bool                                        initRun = true;
         uint8_t                                     jointCount;
         std::unique_ptr<KDL::Chain>                 chain;
         KDL::JntArray                               jointMinimums;

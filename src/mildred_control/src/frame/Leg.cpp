@@ -44,6 +44,8 @@ namespace Mildred {
         ROS_INFO("Found %d joints", jointCount);
         jointMinimums.resize(jointCount);
         jointMaximums.resize(jointCount);
+        q_init.resize(jointCount);
+        q_out.resize(jointCount);
 
         // Re-traverse the chain and save limits
         modelLink = model->getLink(tip);
@@ -69,10 +71,11 @@ namespace Mildred {
                 }
 
                 ROS_INFO_STREAM("  - Lower: " << lower);
-                ROS_INFO_STREAM("  - Upper: " << upper);
-
                 jointMinimums(index) = lower;
+
+                ROS_INFO_STREAM("  - Upper: " << upper);
                 jointMaximums(index) = upper;
+
                 i++;
             }
 
@@ -91,9 +94,6 @@ namespace Mildred {
         ik_solver_vel->setWeightTS(matrix_Mx);
         ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR_JL>(*chain, jointMinimums, jointMaximums, *fk_solver, *ik_solver_vel, 1000, 0.001f);
         //ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR>(*chain, *fk_solver, *ik_solver_vel, 1000, 0.01f);
-
-        q_init.resize(jointCount);
-        q_out.resize(jointCount);
 
         return true;
     }
@@ -117,23 +117,31 @@ namespace Mildred {
     bool Leg::doIK(KDL::Vector target) {
         targetPosition = target;
 
-        //Get the current joint positions (our array is base->tip, IK works with tip->base)
-        std::string debug;
-        for (unsigned int i = 0; i < DOF; i++) {
-            debug += std::to_string(i) + ": " + std::to_string(joints[i].currentPosition) + " ";
-            q_init((DOF - 1) - i) = joints[i].currentPosition;
-            //q_init(i) = joints[i].currentPosition;
+        if (initRun) {
+            q_init(0) = 0.00;
+            q_init(1) = -M_PI_2;
+            q_init(2) = 3 * M_PI_4;
+        } else {
+            //Get the current joint positions (our array is base->tip, IK works with tip->base)
+            std::string       debug;
+            for (unsigned int i = 0; i < DOF; ++i) {
+                debug += std::to_string(i) + ": " + std::to_string(joints[i].currentPosition) + " ";
+                //q_init((DOF - 1) - i) = joints[i].currentPosition;
+                q_init(i) = joints[i].currentPosition;
+            }
+            ROS_DEBUG_STREAM(" -  CJP: " << debug);
         }
-        ROS_DEBUG_STREAM(" -  CJP: " << debug);
 
         int ik_valid = ik_solver_pos->CartToJnt(q_init, KDL::Frame(target), q_out);
 
         // Only when a solution is found it will be sent
         if (ik_valid >= 0) {
-            for (unsigned int i = 0; i < jointCount; i++) {
-                joints[i].targetPosition = q_out((DOF - 1) - i);
-                //joints[i].targetPosition = q_out(i);
+            for (unsigned int i = 0; i < jointCount; ++i) {
+                //joints[i].targetPosition = q_out((DOF - 1) - i);
+                joints[i].targetPosition = q_out(i);
             }
+            initRun = false;
+
         } else {
             ROS_WARN("Leg::doIK() IK Solution not found for : %s, error: %d", name.c_str(), ik_valid);
             ROS_DEBUG("Leg::doIK() IK POS: %f %f %f", target.x(), target.y(), target.z());
@@ -142,6 +150,8 @@ namespace Mildred {
             //for (unsigned int i = 0; i < jointCount; i++) {
             //    joints[i].targetPosition = q_out(i);
             //}
+
+            initRun = true;
         }
 
         return (ik_valid >= 0);
