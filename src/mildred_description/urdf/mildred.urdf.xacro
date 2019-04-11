@@ -19,7 +19,7 @@
         <visual>
             <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 0.00"/>
             <geometry>
-                <cylinder radius="${thorax_radius}" length="${thorax_height}"/>
+                <mesh filename="package://mildred_description/stl/body.stl" scale="0.001 0.001 0.001"/>
             </geometry>
             <material name="yellow">
                 <color rgba="255 255 0 1"/>
@@ -28,10 +28,11 @@
         <collision>
             <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 0.00"/>
             <geometry>
-                <cylinder radius="${thorax_radius}" length="${thorax_height}"/>
+                <!--<cylinder radius="${thorax_radius}" length="${thorax_height}"/>-->
+                <mesh filename="package://mildred_description/stl/body.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </collision>
-        <xacro:default_inertial/>
+        <xacro:default_inertial_mass mass="${thorax_mass}"/>
         <!--<xacro:default_inertial mass="${thorax_mass}"/>-->
     </link>
     <gazebo reference="thorax">
@@ -41,32 +42,63 @@
     <!-- Leg Macro -->
     <xacro:macro name="leg" params="suffix angle x y mirror">
 
-        <!-- Link 1/Coxa -->
-        <joint name="TC_joint_${suffix}" type="revolute">
+        <!-- Leg Anchor -->
+        <joint name="leg_joint_${suffix}" type="fixed">
             <parent link="thorax"/>
-            <child link="coxa_${suffix}"/>
+            <child link="leg_${suffix}"/>
             <origin xyz="${x} ${y} 0.00" rpy="0.00 0.00 ${angle}"/>
+        </joint>
+        <link name="leg_${suffix}">
+            <visual>
+                <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 ${radians(-90)}"/>
+                <geometry>
+                    <mesh filename="package://mildred_description/stl/xl430.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+                <material name="red">
+                    <color rgba="255 0 0 1"/>
+                </material>
+            </visual>
+            <collision>
+                <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 ${radians(-90)}"/>
+                <geometry>
+                    <mesh filename="package://mildred_description/stl/xl430.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+            </collision>
+            <xacro:default_inertial/>
+        </link>
+        <gazebo reference="leg_${suffix}">
+            <material>Gazebo/Red</material>
+        </gazebo>
+
+        <!-- Link 1/Coxa -->
+        <joint name="coxa_joint_${suffix}" type="revolute">
+            <parent link="leg_${suffix}"/>
+            <child link="coxa_${suffix}"/>
+            <!--<origin xyz="${x} ${y} 0.00" rpy="0.00 0.00 ${angle}"/>-->
+            <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 0.00"/>
             <axis xyz="0.00 0.00 1.00"/>
-            <limit lower="${TC_joint_lower_limit}" upper="${TC_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}"/>
-            <!--<dynamics damping="${damping}" friction="${friction}" />-->
+            <limit lower="${coxa_joint_lower_limit}" upper="${coxa_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}"/>
+            <dynamics damping="${damping}" friction="${friction}" />
         </joint>
         <link name="coxa_${suffix}">
             <visual>
-                <origin xyz="${coxa_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>
+                <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 ${radians(-90)}"/>
                 <geometry>
-                    <cylinder radius="0.02" length="${coxa_length}"/>
+                    <mesh filename="package://mildred_description/stl/coxa.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
                 <material name="blue">
                     <color rgba="0 0 255 1"/>
                 </material>
             </visual>
             <collision>
-                <origin xyz="${coxa_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>
+                <!--<origin xyz="${coxa_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
+                <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 ${radians(-90)}"/>
                 <geometry>
-                    <cylinder radius="0.02" length="${coxa_length}"/>
+                    <!--<cylinder radius="0.02" length="${coxa_length}"/>-->
+                    <mesh filename="package://mildred_description/stl/coxa.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
             </collision>
-            <xacro:default_inertial/>
+            <xacro:default_inertial_mass mass="${coxa_mass}"/>
             <!--<xacro:cylinder_inertial_with_origin mass="${coxa_mass}" radius="0.02" length="${coxa_length}">-->
                 <!--<origin xyz="${coxa_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
             <!--</xacro:cylinder_inertial_with_origin>-->
@@ -74,43 +106,45 @@
         <gazebo reference="coxa_${suffix}">
             <material>Gazebo/Blue</material>
         </gazebo>
-        <transmission name="TC_trans_${suffix}">
+        <transmission name="coxa_trans_${suffix}">
             <type>transmission_interface/SimpleTransmission</type>
-            <joint name="TC_joint_${suffix}">
+            <joint name="coxa_joint_${suffix}">
                 <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
             </joint>
-            <actuator name="TC_motor_${suffix}">
+            <actuator name="coxa_motor_${suffix}">
                 <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
         </transmission>
 
         <!-- Link 2/Femur -->
-        <joint name="CF_joint_${suffix}" type="revolute">
+        <joint name="femur_joint_${suffix}" type="revolute">
             <parent link="coxa_${suffix}"/>
             <child link="femur_${suffix}"/>
-            <origin xyz="${coxa_length} 0.00 0.00" rpy="0.00 0.00 0.00"/>
+            <origin xyz="${coxa_length} 0.00 ${coxa_height}" rpy="0.00 0.00 0.00"/>
             <axis xyz="0.00 1.00 0.00"/>
-            <limit lower="${CF_joint_lower_limit}" upper="${CF_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}"/>
-            <!--<dynamics damping="${damping}" friction="${friction}" />-->
+            <limit lower="${femur_joint_lower_limit}" upper="${femur_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}"/>
+            <dynamics damping="${damping}" friction="${friction}" />
         </joint>
         <link name="femur_${suffix}">
             <visual>
-                <origin xyz="${femur_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>
+                <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 ${radians(-90)}"/>
                 <geometry>
-                    <cylinder radius="0.02" length="${femur_length}"/>
+                    <mesh filename="package://mildred_description/stl/femur.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
                 <material name="blue">
                     <color rgba="0 127 127 1"/>
                 </material>
             </visual>
             <collision>
-                <origin xyz="${femur_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>
+                <!--<origin xyz="${femur_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
+                <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 ${radians(-90)}"/>
                 <geometry>
-                    <cylinder radius="0.02" length="${femur_length}"/>
+                    <!--<cylinder radius="0.02" length="${femur_length}"/>-->
+                    <mesh filename="package://mildred_description/stl/femur.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
             </collision>
-            <xacro:default_inertial/>
+            <xacro:default_inertial_mass mass="${femur_mass}"/>
             <!--<xacro:cylinder_inertial_with_origin mass="${femur_mass}" radius="0.02" length="${femur_length}">-->
                 <!--<origin xyz="${femur_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
             <!--</xacro:cylinder_inertial_with_origin>-->
@@ -118,43 +152,45 @@
         <gazebo reference="femur_${suffix}">
             <material>Gazebo/Turquoise</material>
         </gazebo>
-        <transmission name="CF_trans_${suffix}">
+        <transmission name="femur_trans_${suffix}">
             <type>transmission_interface/SimpleTransmission</type>
-            <joint name="CF_joint_${suffix}">
+            <joint name="femur_joint_${suffix}">
                 <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
             </joint>
-            <actuator name="CF_motor_${suffix}">
+            <actuator name="femur_motor_${suffix}">
                 <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
         </transmission>
 
         <!-- Link 3/Tibia -->
-        <joint name="FT_joint_${suffix}" type="revolute">
+        <joint name="tibia_joint_${suffix}" type="revolute">
             <parent link="femur_${suffix}"/>
             <child link="tibia_${suffix}"/>
             <origin xyz="${femur_length} 0.00 0.00" rpy="0.00 0.00 0.00"/>
             <axis xyz="0.00 1.00 0.00"/>
-            <limit lower="${FT_joint_lower_limit}" upper="${FT_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}"/>
-            <!--<dynamics damping="${damping}" friction="${friction}" />-->
+            <limit lower="${tibia_joint_lower_limit}" upper="${tibia_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}"/>
+            <dynamics damping="${damping}" friction="${friction}" />
         </joint>
         <link name="tibia_${suffix}">
             <visual>
-                <origin xyz="${tibia_length/2} 0.000 0.00" rpy="0.00 ${radians(90)} 0.00"/>
+                <origin xyz="0.00 0.000 0.00" rpy="${radians(tibia_angle)} 0.00 ${radians(-90)}"/>
                 <geometry>
-                    <cylinder radius="0.02" length="${tibia_length}"/>
+                    <mesh filename="package://mildred_description/stl/tibia.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
                 <material name="blue">
                     <color rgba="0 0 255 1"/>
                 </material>
             </visual>
             <collision>
-                <origin xyz="${tibia_length/2} 0.000 0.00" rpy="0.00 ${radians(90)} 0.00"/>
+                <!--<origin xyz="${tibia_length/2} 0.000 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
+                <origin xyz="0.00 0.000 0.00" rpy="${radians(tibia_angle)} 0.00 ${radians(-90)}"/>
                 <geometry>
-                    <cylinder radius="0.02" length="${tibia_length}"/>
+                    <!--<cylinder radius="0.02" length="${tibia_length}"/>-->
+                    <mesh filename="package://mildred_description/stl/tibia.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
             </collision>
-            <xacro:default_inertial/>
+            <xacro:default_inertial_mass mass="${tibia_mass}"/>
             <!--<xacro:cylinder_inertial_with_origin mass="${tibia_mass}" radius="0.02" length="${tibia_length}">-->
                 <!--<origin xyz="${tibia_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
             <!--</xacro:cylinder_inertial_with_origin>-->
@@ -162,12 +198,12 @@
         <gazebo reference="tibia_${suffix}">
             <material>Gazebo/Purple</material>
         </gazebo>
-        <transmission name="FT_trans_${suffix}">
+        <transmission name="tibia_trans_${suffix}">
             <type>transmission_interface/SimpleTransmission</type>
-            <joint name="FT_joint_${suffix}">
+            <joint name="tibia_joint_${suffix}">
                 <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
             </joint>
-            <actuator name="FT_motor_${suffix}">
+            <actuator name="tibia_motor_${suffix}">
                 <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
@@ -195,16 +231,16 @@
                     <sphere radius="${foot_radius}"/>
                 </geometry>
             </collision>
-            <xacro:default_inertial/>
+            <xacro:default_inertial_mass mass="${foot_mass}"/>
             <!--<xacro:sphere_inertial mass="${foot_mass}" radius="0.01"/>-->
         </link>
         <gazebo reference="foot_frame_${suffix}">
             <material>Gazebo/Red</material>
-            <!--<mu1 value="1.0"/>-->
-            <!--<mu2 value="1.0"/>-->
-            <!--<kp value="10000000.0"/>-->
-            <!--<kd value="1.0"/>-->
-            <!--<fdir1 value="1 0 0"/>-->
+            <mu1 value="1.0"/>
+            <mu2 value="1.0"/>
+            <kp value="10000000.0"/>
+            <kd value="1.0"/>
+            <fdir1 value="1 0 0"/>
         </gazebo>
 
     </xacro:macro>

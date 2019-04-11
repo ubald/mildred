@@ -5,7 +5,6 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /RobotModel1/Links1
-        - /Marker1
       Splitter Ratio: 0.5404762029647827
     Tree Height: 359
   - Class: rviz/Selection
@@ -62,41 +61,142 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-      Marker Scale: 0.20000000298023224
+        base_link:
+          Value: true
+        coxa_0:
+          Value: true
+        coxa_1:
+          Value: true
+        coxa_2:
+          Value: true
+        coxa_3:
+          Value: true
+        coxa_4:
+          Value: true
+        coxa_5:
+          Value: true
+        femur_0:
+          Value: true
+        femur_1:
+          Value: true
+        femur_2:
+          Value: true
+        femur_3:
+          Value: true
+        femur_4:
+          Value: true
+        femur_5:
+          Value: true
+        foot_frame_0:
+          Value: true
+        foot_frame_1:
+          Value: true
+        foot_frame_2:
+          Value: true
+        foot_frame_3:
+          Value: true
+        foot_frame_4:
+          Value: true
+        foot_frame_5:
+          Value: true
+        leg_0:
+          Value: true
+        leg_1:
+          Value: true
+        leg_2:
+          Value: true
+        leg_3:
+          Value: true
+        leg_4:
+          Value: true
+        leg_5:
+          Value: true
+        thorax:
+          Value: true
+        tibia_0:
+          Value: true
+        tibia_1:
+          Value: true
+        tibia_2:
+          Value: true
+        tibia_3:
+          Value: true
+        tibia_4:
+          Value: true
+        tibia_5:
+          Value: true
+      Marker Scale: 0.15000000596046448
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        base_link:
+          thorax:
+            leg_0:
+              coxa_0:
+                femur_0:
+                  tibia_0:
+                    foot_frame_0:
+                      {}
+            leg_1:
+              coxa_1:
+                femur_1:
+                  tibia_1:
+                    foot_frame_1:
+                      {}
+            leg_2:
+              coxa_2:
+                femur_2:
+                  tibia_2:
+                    foot_frame_2:
+                      {}
+            leg_3:
+              coxa_3:
+                femur_3:
+                  tibia_3:
+                    foot_frame_3:
+                      {}
+            leg_4:
+              coxa_4:
+                femur_4:
+                  tibia_4:
+                    foot_frame_4:
+                      {}
+            leg_5:
+              coxa_5:
+                femur_5:
+                  tibia_5:
+                    foot_frame_5:
+                      {}
       Update Interval: 0
       Value: true
     - Alpha: 1
-      CF_joint_0:
+      femur_joint_0:
         Value: true
-      CF_joint_1:
+      femur_joint_1:
         Value: true
-      CF_joint_2:
+      femur_joint_2:
         Value: true
-      CF_joint_3:
+      femur_joint_3:
         Value: true
-      CF_joint_4:
+      femur_joint_4:
         Value: true
-      CF_joint_5:
+      femur_joint_5:
         Value: true
       Class: rviz/Effort
-      Enabled: false
-      FT_joint_0:
+      Enabled: true
+      tibia_joint_0:
         Value: true
-      FT_joint_1:
+      tibia_joint_1:
         Value: true
-      FT_joint_2:
+      tibia_joint_2:
         Value: true
-      FT_joint_3:
+      tibia_joint_3:
         Value: true
-      FT_joint_4:
+      tibia_joint_4:
         Value: true
-      FT_joint_5:
+      tibia_joint_5:
         Value: true
       History Length: 1
       Joints:
@@ -104,22 +204,22 @@ Visualization Manager:
       Name: Effort
       Robot Description: robot_description
       Scale: 0.009999999776482582
-      TC_joint_0:
+      coxa_joint_0:
         Value: true
-      TC_joint_1:
+      coxa_joint_1:
         Value: true
-      TC_joint_2:
+      coxa_joint_2:
         Value: true
-      TC_joint_3:
+      coxa_joint_3:
         Value: true
-      TC_joint_4:
+      coxa_joint_4:
         Value: true
-      TC_joint_5:
+      coxa_joint_5:
         Value: true
       TF Prefix: ""
       Topic: /mildred/joint_states
       Unreliable: false
-      Value: false
+      Value: true
       Width: 0.004999999888241291
     - Alpha: 1
       Class: rviz/RobotModel
@@ -143,7 +243,7 @@ Visualization Manager:
       Name: Marker
       Namespaces:
         {}
-      Queue Size: 100
+      Queue Size: 1
       Value: true
   Enabled: true
   Global Options:
@@ -207,4 +307,4 @@ Window Geometry:
     collapsed: true
   Width: 1238
   X: 2079
-  Y: 674
+  Y: 618
