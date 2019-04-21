@@ -1,6 +1,6 @@
 #include <utility>
 
-#include "mildred_control/frame/Leg.h"
+#include "Leg.h"
 
 namespace Mildred {
     Leg::Leg(unsigned int index) :
@@ -106,6 +106,12 @@ namespace Mildred {
 
     void Leg::setGait(std::shared_ptr<Mildred::Gait> gait) {
         currentGait = std::move(gait);
+    }
+
+    void Leg::turnActuatorsOff() {
+        for (unsigned int i = 0; i < DOF; ++i) {
+            joints[i].turnActuatorOff();
+        }
     }
 
     KDL::Vector Leg::doGait() {

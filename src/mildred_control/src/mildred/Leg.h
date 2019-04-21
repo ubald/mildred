@@ -17,8 +17,8 @@
 #include <kdl/chainiksolverpos_nr.hpp>
 //#include <kdl/chainiksolverpos_nr_jl.hpp>
 
-#include <mildred_core/mildred.h>
-#include <mildred_control/gait/Gait.h>
+#include "../../../mildred_core/include/mildred_core/mildred.h"
+#include "mildred_control/gait/Gait.h"
 #include "mildred_control/ik/UChainIkSolverPosNRJL.h"
 
 #include "Joint.h"
@@ -70,7 +70,6 @@ namespace Mildred {
          * @param gait
          */
         void setGait(std::shared_ptr<Mildred::Gait> gait);
-
 
         KDL::Vector    targetPosition;
         KDL::Frame     frame;

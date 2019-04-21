@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(mildred_control)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
+add_compile_options(-std=c++17)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -141,13 +141,17 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}
     src/main.cpp
-    src/MildredControl.cpp
-    src/frame/Body.cpp
-    src/frame/Joint.cpp
-    src/frame/Leg.cpp
+    src/fsm/Machine.cpp
     src/gait/Gait.cpp
     src/gait/ContinuousGait.cpp
     src/ik/UChainIkSolverPosNRJL.cpp
+    src/MildredControl.cpp
+    src/mildred/Body.cpp
+    src/mildred/Joint.cpp
+    src/mildred/Leg.cpp
+    src/mildred/body/states/IdleState.cpp
+    src/mildred/body/states/SittingState.cpp
+    src/mildred/body/states/StandingState.cpp
     )
 
 ## Rename C++ executable without prefix

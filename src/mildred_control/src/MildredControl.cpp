@@ -1,4 +1,4 @@
-#include "mildred_control/MildredControl.h"
+#include "MildredControl.h"
 
 namespace Mildred {
 

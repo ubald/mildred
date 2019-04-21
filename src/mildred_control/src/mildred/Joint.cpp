@@ -1,4 +1,4 @@
-#include "mildred_control/frame/Joint.h"
+#include "Joint.h"
 
 namespace Mildred {
     Joint::Joint() {}

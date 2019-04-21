@@ -11,10 +11,10 @@
 #include <geometry_msgs/Point.h>
 #include <visualization_msgs/Marker.h>
 
-#include <mildred_core/mildred.h>
-#include <mildred_core/RemoteControlMessage.h>
+#include "../../mildred_core/include/mildred_core/mildred.h"
+#include "../../../devel/include/mildred_core/RemoteControlMessage.h"
 
-#include "frame/Body.h"
+#include "mildred/Body.h"
 
 namespace Mildred {
 

@@ -1,6 +1,6 @@
 #include <memory>
 #include <ros/ros.h>
-#include <mildred_control/MildredControl.h>
+#include "MildredControl.h"
 
 using namespace Mildred;
 
@@ -15,11 +15,11 @@ int main(int argc, char **argv) {
         return 1;
     };
 
-    while (ros::ok()) {
-        ros::spinOnce();
-        mildredControl->loop();
-        rate.sleep();
-    }
+    //while (ros::ok()) {
+    //    ros::spinOnce();
+    //    mildredControl->loop();
+    //    rate.sleep();
+    //}
 
     ros::shutdown();
 

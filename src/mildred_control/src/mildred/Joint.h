@@ -12,7 +12,6 @@ namespace Mildred {
         ~Joint() = default;
 
         void setJointState(const sensor_msgs::JointState::ConstPtr &jointState);
-
         std::string name;
 
         double targetPosition  = 0.f;
