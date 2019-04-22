@@ -7,7 +7,6 @@ DynamixelController::DynamixelController(const std::string port, const uint32_t 
       baudRate(baudRate),
       dynamixelWorkbench(std::make_unique<DynamixelWorkbench>()),
       readFrequency(static_cast<uint8_t>(privateNodeHandle.param("read_frequency", 60))),
-      writeFrequency(static_cast<uint8_t>(privateNodeHandle.param("write_frequency", 60))),
       publishFrequency(static_cast<uint8_t>(privateNodeHandle.param("publish_frequency", 60))) {}
 
 bool DynamixelController::init() {
@@ -62,9 +61,6 @@ bool DynamixelController::initWorkbench() {
     return true;
 }
 
-/**
- * Read joint configuration from the YAML file
- */
 bool DynamixelController::getDynamixelJointsInfo() {
     std::string filePath = privateNodeHandle.param<std::string>("joints_config_file", "");
 
@@ -75,50 +71,48 @@ bool DynamixelController::getDynamixelJointsInfo() {
         return false;
     }
 
-    for (const auto property: config["common"]) {
+    for (const auto property: config["common"]["dxl"]) {
         auto field = property.first.as<std::string>();
         auto value = property.second.as<uint32_t>();
-        commonJointConfig.emplace(std::make_pair(field, value));
+        commonDxlConfig.emplace(field, value);
     }
 
-    //YAML::Node joints = config["joints"];
     for (const auto joint: config["joints"]) {
-        const auto name = joint.first.as<std::string>();
+        const auto name = joint["name"].as<std::string>();
         if (name.empty()) {
+            ROS_ERROR("Name is required in YAML joint config");
             continue;
         }
 
-        ROS_DEBUG("%s:", name.c_str());
+        const auto dxlId = joint["id"].as<uint32_t>();
+        dxlIds.emplace_back(name, dxlId);
 
-        auto newJointConfig = jointConfig.emplace(std::make_pair(name, std::unordered_map<std::string, uint32_t>()));
+        JointConfig jointConfig;
+        jointConfig.offset     = joint["offset"].as<double>();
+        jointConfig.multiplier = joint["multiplier"].as<double>();
+        jointConfigs.emplace(dxlId, jointConfig);
 
-        for (const auto property: config["joints"][name]) {
+        ROS_DEBUG_STREAM(name << ": id(" << dxlId << "):");
+
+        auto newJointConfig = dxlConfig.emplace(name, std::unordered_map<std::string, uint32_t>());
+
+        for (const auto property: joint["dxl"]) {
             auto field = property.first.as<std::string>();
             auto value = property.second.as<uint32_t>();
-
-            ROS_DEBUG("    %s: %d", field.c_str(), value);
-
-            if (field == "ID") {
-                jointIds[name] = static_cast<uint8_t>(value);
-                continue;
-            }
-
-            newJointConfig.first->second.emplace(std::make_pair(field, value));
+            ROS_DEBUG_STREAM("    " << field << ": " << value);
+            newJointConfig.first->second.emplace(field, value);
         }
     }
 
     return true;
 }
 
-/**
- * Ping all dynamixel actuators found in the YAML configuration
- */
 bool DynamixelController::pingDynamixels() {
     ROS_DEBUG("Pinging actuators");
 
     const char *log;
 
-    for (auto const &dxl:jointIds) {
+    for (auto const &dxl:dxlIds) {
         uint16_t modelNumber = 0;
         if (!dynamixelWorkbench->ping(dxl.second, &modelNumber, &log)) {
             ROS_ERROR("%s", log);
@@ -132,21 +126,18 @@ bool DynamixelController::pingDynamixels() {
     return true;
 }
 
-/**
- * Write the initial config from the YAML file to the dynamixel actuators
- */
 bool DynamixelController::initDynamixels() {
     ROS_DEBUG("Initializing actuators");
 
     const char *log;
 
-    for (auto const &dxl:jointIds) {
+    for (auto const &dxl:dxlIds) {
         ROS_DEBUG("Initializing Dynamixel[Name: %s, ID: %d]", dxl.first.c_str(), dxl.second);
 
         dynamixelWorkbench->torqueOff(dxl.second);
 
         // Common Config
-        for (auto const &property:commonJointConfig) {
+        for (auto const &property:commonDxlConfig) {
             if (property.first == "ID" || property.first == "Baud_Rate") {
                 continue;
             }
@@ -160,7 +151,7 @@ bool DynamixelController::initDynamixels() {
         }
 
         // Custom Config
-        for (auto const &property:jointConfig[dxl.first]) {
+        for (auto const &property:dxlConfig[dxl.first]) {
             if (property.first == "ID" || property.first == "Baud_Rate") {
                 continue;
             }
@@ -173,7 +164,9 @@ bool DynamixelController::initDynamixels() {
             }
         }
 
-        // dynamixelWorkbench->torqueOn(dxl.second);
+        if (torqueEnabled) {
+            dynamixelWorkbench->torqueOn(dxl.second);
+        }
     }
 
     return true;
@@ -183,7 +176,7 @@ bool DynamixelController::initControlItems() {
     ROS_DEBUG("Initializing control items");
 
     // Just get the first and assume all the same model
-    auto it = jointIds.begin();
+    auto it = dxlIds.begin();
 
     goalPositionControl = dynamixelWorkbench->getItemInfo(it->second, "Goal_Position");
     if (goalPositionControl == nullptr) { return false; }
@@ -234,8 +227,8 @@ void DynamixelController::initPublisher() {
 
 void DynamixelController::initSubscriber() {
     ROS_DEBUG("Initializing subscribers");
-    jointControlSubscriber = nodeHandle.subscribe("/mildred/joint_position_controller/command", 1, &DynamixelController::dynamixelPositionControlCallback, this);
-
+    jointControlSubscriber   = nodeHandle.subscribe("joint_position_controller/command", 1, &DynamixelController::dynamixelPositionControlCallback, this);
+    actuatorsStateSubscriber = nodeHandle.subscribe("actuators_state", 100, &DynamixelController::actuatorsStateCallback, this);
 }
 
 void DynamixelController::initServices() {
@@ -244,80 +237,57 @@ void DynamixelController::initServices() {
 }
 
 void DynamixelController::readCallback(const ros::TimerEvent &) {
-#ifdef DEBUG
-    static double priv_read_secs = ros::Time::now().toSec();
-#endif
     const char *log = nullptr;
 
-    dynamixel_workbench_msgs::DynamixelState dynamixelState[jointIds.size()];
+    dynamixel_workbench_msgs::DynamixelState dynamixelState[dxlIds.size()];
     dynamixelStates.dynamixel_state.clear();
 
-    int32_t load[jointIds.size()];
-    int32_t velocity[jointIds.size()];
-    int32_t position[jointIds.size()];
+    int32_t load[dxlIds.size()];
+    int32_t velocity[dxlIds.size()];
+    int32_t position[dxlIds.size()];
 
-    uint8_t idList[jointIds.size()];
+    uint8_t idList[dxlIds.size()];
     uint8_t idCount = 0;
 
-    //for (auto const &dxl:jointIds) {
-    //    jointState.name.push_back(dxl.first);
-    //    idList[idCount++] = dxl.second;
-    //}
-
-    for (auto const &dxl:jointIds) {
+    for (auto const &dxl:dxlIds) {
         dynamixelState[idCount].name = dxl.first;
         dynamixelState[idCount].id   = dxl.second;
         // TODO: Store that list
         idList[idCount++] = dxl.second;
     }
 
-#ifndef DEBUG
-    // if (!moving) {
-#endif
     if (!dynamixelWorkbench->syncRead(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, &log)) {
-        ROS_ERROR("%s", log);
+        ROS_ERROR("Sync Read Error: %s", log);
+        return;
     }
 
     if (!dynamixelWorkbench->getSyncReadData(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, currentLoadControl->address, currentLoadControl->data_length, load, &log)) {
-        ROS_ERROR("%s", log);
+        ROS_ERROR("Load Data Error: %s", log);
+        return;
     }
 
     if (!dynamixelWorkbench->getSyncReadData(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, currentVelocityControl->address, currentVelocityControl->data_length, velocity, &log)) {
-        ROS_ERROR("%s", log);
+        ROS_ERROR("Velocity Data Error: %s", log);
+        return;
     }
 
     if (!dynamixelWorkbench->getSyncReadData(CURRENT_STATE_SYNC_READ_HANDLER, idList, idCount, currentPositionControl->address, currentPositionControl->data_length, position, &log)) {
-        ROS_ERROR("%s", log);
+        ROS_ERROR("Position Data Error: %s", log);
+        return;
     }
-
-    //for (uint8_t index = 0; index < idCount; ++index) {
-    //    jointState.effort.push_back(dynamixelWorkbench->convertValue2Current((int16_t) load[index])); // TODO: mA != N
-    //    jointState.velocity.push_back(dynamixelWorkbench->convertValue2Velocity(idList[index], velocity[index]));
-    //    jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(idList[index], position[index]));
-    //}
 
     for (uint8_t index = 0; index < idCount; index++) {
         dynamixelState[index].present_position = position[index];
         dynamixelState[index].present_velocity = velocity[index];
-        dynamixelState[index].present_current  = (int16_t) load[index];
+        dynamixelState[index].present_current  = static_cast<int16_t>(load[index]);
         dynamixelStates.dynamixel_state.push_back(dynamixelState[index]);
     }
-#ifndef DEBUG
-    // }
-#endif
-
-#ifdef DEBUG
-    ROS_WARN("[readCallback] diff_secs : %f", ros::Time::now().toSec() - priv_read_secs);
-    priv_read_secs = ros::Time::now().toSec();
-#endif
 }
 
 void DynamixelController::publishCallback(const ros::TimerEvent &) {
-#ifdef DEBUG
-    static double priv_pub_secs =ros::Time::now().toSec();
-#endif
-    // TODO: Allow disabling
-    dynamixelStatePublisher.publish(dynamixelStates);
+    if (publishDynamixelState) {
+        dynamixelStatePublisher.publish(dynamixelStates);
+    }
 
     jointState.header.stamp = ros::Time::now();
     jointState.name.clear();
@@ -325,93 +295,56 @@ void DynamixelController::publishCallback(const ros::TimerEvent &) {
     jointState.velocity.clear();
     jointState.effort.clear();
 
-    uint8_t         idCount = 0;
-    for (auto const &dxl:jointIds) {
+    uint8_t idCount = 0;
+
+    for (auto const &dxl:dxlIds) {
+        JointConfig jointConfig = jointConfigs.at(dxl.second);
+
+        auto position = static_cast<int32_t>(dynamixelStates.dynamixel_state[idCount].present_position * jointConfig.multiplier + jointConfig.offset);
+
         jointState.name.push_back(dxl.first);
-        jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(dxl.second, dynamixelStates.dynamixel_state[idCount].present_position));
+        jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(dxl.second, position));
         jointState.velocity.push_back(dynamixelWorkbench->convertValue2Velocity(dxl.second, dynamixelStates.dynamixel_state[idCount].present_velocity));
-        jointState.effort.push_back(dynamixelWorkbench->convertValue2Current((int16_t) dynamixelStates.dynamixel_state[idCount].present_current)); // TODO: mA != N
+        jointState.effort.push_back(dynamixelWorkbench->convertValue2Load((int16_t) dynamixelStates.dynamixel_state[idCount].present_current)); // TODO: mA != N
         idCount++;
     }
 
     jointStatePublisher.publish(jointState);
-#ifdef DEBUG
-    ROS_WARN("[publishCallback] diff_secs : %f", ros::Time::now().toSec() - priv_pub_secs);
-    priv_pub_secs = ros::Time::now().toSec();
-#endif
 }
 
-void DynamixelController::writeCallback(const ros::TimerEvent &) {
-#ifdef DEBUG
-    static double priv_pub_secs =ros::Time::now().toSec();
-#endif
-    //const char *log = nullptr;
-    //
-    ////uint8_t idList[dynamixels.size()];
-    ////uint8_t idCount = 0;
-    //
-    //int32_t position[dynamixels.size()];
-    //
-    //static uint32_t pointCount    = 0;
-    //static uint32_t positionCount = 0;
-    //
-    ////for (auto const &joint:jnt_tra_msg_->joint_names) {
-    ////    idList[idCount] = (uint8_t) dynamixels[joint];
-    ////    idCount++;
-    ////}
-    //
-    //if (!moving) {
-    //    for (uint8_t index = 0; index < idCount; ++index) {
-    //        position[index] = dynamixelWorkbench->convertRadian2Value(idList[index], jnt_tra_msg_->points[pointCount].positions.at(index));
-    //    }
-    //
-    //    if (!dynamixelWorkbench->syncWrite(SYNC_WRITE_HANDLER_FOR_GOAL_POSITION, idList, idCount, position, 1, &log)) {
-    //        ROS_ERROR("%s", log);
-    //    }
-    //
-    //    positionCount++;
-    //    if (positionCount >= jnt_tra_msg_->points[pointCount].positions.size()) {
-    //        pointCount++;
-    //        positionCount = 0;
-    //        if (pointCount >= jnt_tra_msg_->points.size()) {
-    //            moving        = false;
-    //            pointCount    = 0;
-    //            positionCount = 0;
-    //
-    //            ROS_INFO("Complete Execution");
-    //        }
-    //    }
-    //}
-
-#ifdef DEBUG
-    ROS_WARN("[writeCallback] diff_secs : %f", ros::Time::now().toSec() - priv_pub_secs);
-    priv_pub_secs = ros::Time::now().toSec();
-#endif
+void DynamixelController::actuatorsStateCallback(const mildred_core::ActuatorsStateMessage::ConstPtr &actuatorsStateMessage) {
+    ROS_INFO_STREAM("Turning torque " << (actuatorsStateMessage->state > 0 ? "ON" : "OFF") << " on all joints");
+    for (auto const &dxl:dxlIds) {
+        if (actuatorsStateMessage->state > 0) {
+            dynamixelWorkbench->torqueOn(dxl.second);
+        } else {
+            dynamixelWorkbench->torqueOff(dxl.second);
+        }
+    }
 }
 
 void DynamixelController::dynamixelPositionControlCallback(const std_msgs::Float64MultiArray::ConstPtr &requestedPositionMessage) {
     const char *log = nullptr;
 
-    uint8_t idCount = static_cast<uint8_t>(jointIds.size());
+    auto idCount = static_cast<uint8_t>(dxlIds.size());
     if (idCount > requestedPositionMessage->data.size()) {
         ROS_WARN("Received less positions than the number of joints");
         return;
     }
 
+    uint8_t index = 0;
     uint8_t idList[idCount];
-    idCount            = 0;
-    for (auto const &dxl:jointIds) {
-        // TODO: Store that list
-        idList[idCount++] = dxl.second;
-    }
+    int32_t position[idCount];
 
-    int32_t      position[idCount];
-    for (uint8_t index = 0; index < idCount; ++index) {
-        position[index] = dynamixelWorkbench->convertRadian2Value(idList[index], static_cast<float>(requestedPositionMessage->data[index]));
+    for (auto const &dxl:dxlIds) {
+        JointConfig jointConfig = jointConfigs.at(dxl.second);
+        idList[index]   = dxl.second;
+        position[index] = dynamixelWorkbench->convertRadian2Value(dxl.second, static_cast<float>((requestedPositionMessage->data[index] - jointConfig.offset) / jointConfig.multiplier));
+        index++;
     }
 
     if (!dynamixelWorkbench->syncWrite(SYNC_WRITE_HANDLER_FOR_GOAL_POSITION, idList, idCount, position, 1, &log)) {
-        ROS_ERROR("%s", log);
+        ROS_ERROR("Error writing position: %s", log);
     }
 }
 
@@ -455,7 +388,6 @@ int main(int argc, char **argv) {
     }
 
     ros::Timer readTimer    = nodeHandle.createTimer(ros::Duration(1.0f / (double) dynamixelController.getReadFrequency()), &DynamixelController::readCallback, &dynamixelController);
-    ros::Timer writeTimer   = nodeHandle.createTimer(ros::Duration(1.0f / (double) dynamixelController.getWriteFrequency()), &DynamixelController::writeCallback, &dynamixelController);
     ros::Timer publishTimer = nodeHandle.createTimer(ros::Duration(1.0f / (double) dynamixelController.getPublishFrequency()), &DynamixelController::publishCallback, &dynamixelController);
 
     ROS_INFO("Ready!");

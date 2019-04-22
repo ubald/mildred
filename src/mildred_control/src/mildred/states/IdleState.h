@@ -1,18 +1,22 @@
 #pragma once
 
 #include "mildred_control/fsm/State.h"
+#include "mildred_control/MildredControl.h"
 
 #include "events.h"
-#include "../../Body.h"
 
 namespace Mildred {
     class IdleState : public State {
         public:
-            IdleState(Body * body);
+            IdleState(MildredControl * control);
             ~IdleState() = default;
+
             std::string name() const override { return "idle"; }
+
             bool onEnter(const Event &event) override;
+            bool onExit(const Event &event) override;
+
         protected:
-            Body *body{nullptr};
+            MildredControl *control{nullptr};
     };
 }

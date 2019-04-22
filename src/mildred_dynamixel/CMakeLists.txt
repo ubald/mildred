@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     std_msgs
     dynamixel_workbench_toolbox
+    mildred_core
     )
 
 find_package(Eigen3 REQUIRED)
@@ -125,7 +126,7 @@ endif (NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
 catkin_package(
     INCLUDE_DIRS include
     #  LIBRARIES mildred_dynamixel
-    CATKIN_DEPENDS roscpp std_msgs dynamixel_workbench_toolbox
+    CATKIN_DEPENDS roscpp std_msgs dynamixel_workbench_toolbox mildred_core
     DEPENDS EIGEN3
 )
 

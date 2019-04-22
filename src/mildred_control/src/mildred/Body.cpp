@@ -1,32 +1,9 @@
-#include "Body.h"
-#include "body/states/IdleState.h"
-#include "body/states/StandingState.h"
-#include "body/states/SittingState.h"
+#include "mildred_control/mildred/Body.h"
 
 namespace Mildred {
-    Body::Body() {
-        auto idle = std::make_shared<IdleState>(this);
-        auto sitting = std::make_shared<SittingState>();
-        auto standing = std::make_shared<StandingState>();
-
-        machine.addState(idle, true);
-        machine.addState(sitting);
-        machine.addState(standing);
-
-        machine.addTransition<Stand>(idle, standing);
-        machine.addTransition<Sit>(standing, sitting);
-
-        machine.addTransition<Ragdoll>(sitting, idle);
-        machine.addTransition<Ragdoll>(standing, idle);
-
-        std::cout <<  "EVENT?" << std::endl;
-        machine.handleEvent(Stand());
-
-    }
+    Body::Body() {}
 
     bool Body::setup(std::shared_ptr<urdf::Model> model, uint8_t legCount, std::string legTipPrefix) {
-        return true;
-
         auto tree = std::make_unique<KDL::Tree>();
         if (!kdl_parser::treeFromUrdfModel(*model, *tree)) {
             ROS_ERROR("Failed to initialize tree object");
@@ -91,12 +68,6 @@ namespace Mildred {
         }
     }
 
-    void Body::turnActuatorsOff() {
-        for (const auto &leg:legs) {
-            leg->turnActuatorsOff();
-        }
-    }
-
     void Body::tick() {
         // A check is first made to see if an axis' value is 0.00 because the Norm()
         // method doesn't check that and returns NaN.
@@ -127,7 +98,6 @@ namespace Mildred {
             ROS_DEBUG_STREAM(" - Gait: " << gaitStep.x() << ", " << gaitStep.y() << ", " << gaitStep.z());
             ROS_DEBUG_STREAM(" - Body: " << positionInBody.x() << ", " << positionInBody.y() << ", " << positionInBody.z());
             leg->doIK(positionInBody);
-            //break;
         }
     }
 }

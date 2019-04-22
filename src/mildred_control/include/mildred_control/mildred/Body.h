@@ -8,7 +8,6 @@
 #include <kdl_parser/kdl_parser.hpp>
 #include <kdl/tree.hpp>
 
-#include "mildred_control/fsm/Machine.h"
 #include "mildred_control/gait/gaits.h"
 
 #include "Leg.h"
@@ -35,8 +34,6 @@ namespace Mildred {
             KDL::Vector2  velocity;
 
         protected:
-            Mildred::Machine machine;
-
             std::shared_ptr<Mildred::Gait> gait{nullptr};
 
             double speed;

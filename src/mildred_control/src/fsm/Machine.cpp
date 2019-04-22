@@ -11,6 +11,15 @@ namespace Mildred {
 
         if (initial) {
             currentState = state;
+            currentState->onEnter(Event());
         }
+    }
+
+    void Machine::tick(double now, double delta) {
+        if (currentState == nullptr) {
+            return;
+        }
+
+        currentState->tick(now, delta);
     }
 }

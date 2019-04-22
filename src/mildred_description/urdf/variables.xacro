@@ -14,7 +14,7 @@
     <xacro:property name="coxa_mass" value="0.162"/>
 
     <xacro:property name="femur_length" value="0.0975"/>
-    <!--<xacro:property name="femur_angle" value="39.2"/>-->
+    <xacro:property name="femur_angle" value="39.2"/>
     <xacro:property name="femur_mass" value="0.025981"/>
 
     <xacro:property name="tibia_length" value="0.195"/>

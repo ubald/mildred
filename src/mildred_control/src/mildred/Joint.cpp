@@ -1,4 +1,4 @@
-#include "Joint.h"
+#include "mildred_control/mildred/Joint.h"
 
 namespace Mildred {
     Joint::Joint() {}
@@ -14,7 +14,6 @@ namespace Mildred {
                 found = true;
                 break;
             }
-
         }
 
         if (!found) {

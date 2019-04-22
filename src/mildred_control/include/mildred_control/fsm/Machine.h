@@ -17,6 +17,7 @@ namespace Mildred {
         public:
             Machine();
             ~Machine() = default;
+
             void addState(std::shared_ptr<State> state, bool initial = false);
 
             template<
@@ -50,8 +51,10 @@ namespace Mildred {
                     return;
                 }
 
-                std::any_cast<std::shared_ptr<BaseTransition<E>>>(transition->second)->transit(event);
+                currentState = std::any_cast<std::shared_ptr<BaseTransition<E>>>(transition->second)->transit(event);
             }
+
+            void tick(double now, double delta);
 
         protected:
             std::vector<std::shared_ptr<State>>                                                       states;

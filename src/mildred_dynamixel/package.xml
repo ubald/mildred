@@ -13,6 +13,8 @@
   <depend>dynamixel_sdk</depend>
   <depend>dynamixel_workbench_toolbox</depend>
 
+  <depend>mildred_core</depend>
+
   <export>
 
   </export>

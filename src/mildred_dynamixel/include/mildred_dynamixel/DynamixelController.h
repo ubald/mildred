@@ -3,21 +3,15 @@
 #include <memory>
 #include <unordered_map>
 
-#include <ros/ros.h>
-
 #include <yaml-cpp/yaml.h>
-
-#include <std_msgs/Float64MultiArray.h>
-#include <sensor_msgs/JointState.h>
-#include <geometry_msgs/Twist.h>
-#include <trajectory_msgs/JointTrajectory.h>
-#include <trajectory_msgs/JointTrajectoryPoint.h>
-
+#include <ros/ros.h>
 #include <dynamixel_workbench_toolbox/dynamixel_workbench.h>
 #include <dynamixel_workbench_msgs/DynamixelStateList.h>
 #include <dynamixel_workbench_msgs/DynamixelCommand.h>
+#include <std_msgs/Float64MultiArray.h>
+#include <sensor_msgs/JointState.h>
 
-#include <dynamixel_workbench_controllers/trajectory_generator.h>
+#include "mildred_core/ActuatorsStateMessage.h"
 
 // SYNC_WRITE_HANDLER
 #define SYNC_WRITE_HANDLER_FOR_GOAL_POSITION 0
@@ -26,77 +20,83 @@
 // SYNC_READ_HANDLER(Only for Protocol 2.0)
 #define CURRENT_STATE_SYNC_READ_HANDLER 0
 
-// #define DEBUG
+typedef struct {
+    double offset     = 0.00f;
+    double multiplier = 0.00f;
+} JointConfig;
 
 class DynamixelController {
-public:
-    DynamixelController(std::string port, uint32_t baudRate);
-    ~DynamixelController() = default;
+    public:
+        DynamixelController(std::string port, uint32_t baudRate);
+        ~DynamixelController() = default;
 
-    bool init();
+        bool init();
 
-    uint8_t getReadFrequency() { return readFrequency; }
-    uint8_t getWriteFrequency() { return writeFrequency; }
-    uint8_t getPublishFrequency() { return publishFrequency; }
+        uint8_t getReadFrequency() { return readFrequency; }
 
-    void readCallback(const ros::TimerEvent &);
-    void writeCallback(const ros::TimerEvent &);
-    void publishCallback(const ros::TimerEvent &);
+        uint8_t getPublishFrequency() { return publishFrequency; }
 
-    void dynamixelPositionControlCallback(const std_msgs::Float64MultiArray::ConstPtr &requestedPositionMessage);
-    bool dynamixelCommandMsgCallback(dynamixel_workbench_msgs::DynamixelCommand::Request &req, dynamixel_workbench_msgs::DynamixelCommand::Response &res);
+        void readCallback(const ros::TimerEvent &);
+        void publishCallback(const ros::TimerEvent &);
 
-private:
-    // ROS NodeHandle
-    ros::NodeHandle nodeHandle;
-    ros::NodeHandle privateNodeHandle;
+        void actuatorsStateCallback(const mildred_core::ActuatorsStateMessage::ConstPtr &actuatorsStateMessage);
+        void dynamixelPositionControlCallback(const std_msgs::Float64MultiArray::ConstPtr &requestedPositionMessage);
+        bool dynamixelCommandMsgCallback(dynamixel_workbench_msgs::DynamixelCommand::Request &req, dynamixel_workbench_msgs::DynamixelCommand::Response &res);
 
-    // ROS Parameters
+    private:
+        // ROS NodeHandle
+        ros::NodeHandle nodeHandle;
+        ros::NodeHandle privateNodeHandle;
 
-    // ROS Topic Publisher
-    ros::Publisher dynamixelStatePublisher;
-    ros::Publisher jointStatePublisher;
+        // ROS Parameters
 
-    // ROS Topic Subscriber
-    ros::Subscriber jointControlSubscriber;
+        // ROS Topic Publisher
+        ros::Publisher dynamixelStatePublisher;
+        ros::Publisher jointStatePublisher;
 
-    // ROS Service Server
-    ros::ServiceServer dynamixelCommandService;
+        // ROS Topic Subscriber
+        ros::Subscriber jointControlSubscriber;
+        ros::Subscriber actuatorsStateSubscriber;
 
-    // ROS Service Client
+        // ROS Service Server
+        ros::ServiceServer dynamixelCommandService;
 
-    // Dynamixel Workbench Parameters
-    std::string port;
-    uint32_t baudRate;
-    std::unique_ptr<DynamixelWorkbench> dynamixelWorkbench;
+        // ROS Service Client
 
-    std::map<std::string, uint8_t> jointIds{};
-    std::unordered_map<std::string, uint32_t> commonJointConfig{};
-    std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> jointConfig{};
+        // Dynamixel Workbench Parameters
+        std::string                         port;
+        uint32_t                            baudRate;
+        std::unique_ptr<DynamixelWorkbench> dynamixelWorkbench;
 
-    const ControlItem * goalPositionControl;
-    const ControlItem * currentPositionControl;
-    const ControlItem * currentVelocityControl;
-    const ControlItem * currentLoadControl;
+        std::vector<std::pair<std::string, uint8_t>>                               dxlIds{};
+        std::unordered_map<std::string, uint32_t>                                  commonDxlConfig{};
+        std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> dxlConfig{};
+        std::unordered_map<uint8_t, JointConfig>                                   jointConfigs{};
 
-    dynamixel_workbench_msgs::DynamixelStateList dynamixelStates{};
-    sensor_msgs::JointState jointState{};
+        bool publishDynamixelState = false;
+        bool torqueEnabled         = false;
 
-    uint8_t readFrequency;
-    uint8_t writeFrequency;
-    uint8_t publishFrequency;
-    std::unique_ptr<ros::Timer> readTimer;
-    std::unique_ptr<ros::Timer> writeTimer;
-    std::unique_ptr<ros::Timer> publishTimer;
+        const ControlItem *goalPositionControl;
+        const ControlItem *currentPositionControl;
+        const ControlItem *currentVelocityControl;
+        const ControlItem *currentLoadControl;
 
-    bool initWorkbench();
-    bool getDynamixelJointsInfo();
-    bool pingDynamixels();
-    bool initDynamixels();
-    bool initControlItems();
-    bool initSDKHandlers();
-    void initPublisher();
-    void initSubscriber();
-    void initServices();
+        dynamixel_workbench_msgs::DynamixelStateList dynamixelStates{};
+        sensor_msgs::JointState                      jointState{};
 
+        uint8_t                     readFrequency;
+        uint8_t                     writeFrequency;
+        uint8_t                     publishFrequency;
+        std::unique_ptr<ros::Timer> readTimer;
+        std::unique_ptr<ros::Timer> publishTimer;
+
+        bool initWorkbench();
+        bool getDynamixelJointsInfo();
+        bool pingDynamixels();
+        bool initDynamixels();
+        bool initControlItems();
+        bool initSDKHandlers();
+        void initPublisher();
+        void initSubscriber();
+        void initServices();
 };

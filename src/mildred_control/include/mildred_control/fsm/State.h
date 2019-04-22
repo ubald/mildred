@@ -18,6 +18,7 @@ namespace Mildred {
             virtual std::string name() const = 0;
             virtual bool onEnter(const Event &event) { return true; }
             virtual bool onExit(const Event &event) { return true; };
+            virtual void tick(double now, double delta) {};
 
         protected:
             State() = default;

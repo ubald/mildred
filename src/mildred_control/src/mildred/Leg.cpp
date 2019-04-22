@@ -1,6 +1,6 @@
 #include <utility>
 
-#include "Leg.h"
+#include "mildred_control/mildred/Leg.h"
 
 namespace Mildred {
     Leg::Leg(unsigned int index) :
@@ -32,7 +32,8 @@ namespace Mildred {
         // Get the joints limits
 
         // Count joints and check that chain isn't broken
-        auto          modelLink = model->getLink(tip);
+        auto modelLink = model->getLink(tip);
+
         while (modelLink && modelLink->parent_joint) {
             if (modelLink->parent_joint->type != urdf::Joint::UNKNOWN && modelLink->parent_joint->type != urdf::Joint::FIXED) {
                 jointCount++;
@@ -57,7 +58,7 @@ namespace Mildred {
                 ROS_INFO("Getting bounds for joint %d: %s", index, modelJoint->name.c_str());
 
                 //Save name to our joint object
-                joints[index].name = modelJoint->name;
+                joints[index].name           = modelJoint->name;
                 joints[index].targetPosition = 0.00f;
 
                 //Get limits
@@ -108,21 +109,32 @@ namespace Mildred {
         currentGait = std::move(gait);
     }
 
-    void Leg::turnActuatorsOff() {
-        for (unsigned int i = 0; i < DOF; ++i) {
-            joints[i].turnActuatorOff();
-        }
-    }
-
     KDL::Vector Leg::doGait() {
         KDL::Vector gaitTargetPosition = currentGait->walk(gaitConfig);
         KDL::Vector positionInLegFrame = frame * gaitTargetPosition;
         return positionInLegFrame;
     }
 
-    bool Leg::doIK(KDL::Vector target) {
-        targetPosition = target;
+    bool Leg::doFK() {
+        KDL::JntArray q_in(jointCount);
+        for (unsigned int i = 0; i < jointCount; ++i) {
+            q_in(i) = joints[i].currentPosition;
+        }
 
+        KDL::Frame p_out;
+        int fk_valid = fk_solver->JntToCart(q_in, p_out);
+        if (fk_valid >= 0) {
+            ROS_DEBUG("P_OUT: %f %f %f", p_out.p.x(), p_out.p.y(), p_out.p.z());
+            return true;
+        } else {
+            ROS_WARN("FK Solution not found for : %s, error: %d", name.c_str(), fk_valid);
+            ROS_DEBUG("FK POS: %f %f %f", q_in(0), q_in(1), q_in(2));
+            ROS_DEBUG("P_OUT: %f %f %f", p_out.p.x(), p_out.p.y(), p_out.p.z());
+            return false;
+        }
+    }
+
+    bool Leg::doIK() {
         if (initRun) {
             q_init(0) = 0.00;
             q_init(1) = -M_PI_2;
@@ -130,36 +142,35 @@ namespace Mildred {
         } else {
             //Get the current joint positions (our array is base->tip, IK works with tip->base)
             std::string       debug;
-            for (unsigned int i = 0; i < DOF; ++i) {
+            for (unsigned int i = 0; i < jointCount; ++i) {
                 debug += std::to_string(i) + ": " + std::to_string(joints[i].currentPosition) + " ";
-                //q_init((DOF - 1) - i) = joints[i].currentPosition;
                 q_init(i) = joints[i].currentPosition;
             }
             ROS_DEBUG_STREAM(" -  CJP: " << debug);
         }
 
-        int ik_valid = ik_solver_pos->CartToJnt(q_init, KDL::Frame(target), q_out);
+        int ik_valid = ik_solver_pos->CartToJnt(q_init, KDL::Frame(targetPosition), q_out);
 
         // Only when a solution is found it will be sent
         if (ik_valid >= 0) {
             for (unsigned int i = 0; i < jointCount; ++i) {
-                //joints[i].targetPosition = q_out((DOF - 1) - i);
                 joints[i].targetPosition = q_out(i);
             }
             initRun = false;
 
         } else {
-            ROS_WARN("Leg::doIK() IK Solution not found for : %s, error: %d", name.c_str(), ik_valid);
-            ROS_DEBUG("Leg::doIK() IK POS: %f %f %f", target.x(), target.y(), target.z());
-            ROS_DEBUG("Leg::doIK() Q_OUT: %f %f %f", q_out(0), q_out(1), q_out(2));
-
-            //for (unsigned int i = 0; i < jointCount; i++) {
-            //    joints[i].targetPosition = q_out(i);
-            //}
+            ROS_WARN("IK Solution not found for : %s, error: %d", name.c_str(), ik_valid);
+            ROS_DEBUG("IK POS: %f %f %f", targetPosition.x(), targetPosition.y(), targetPosition.z());
+            ROS_DEBUG("Q_OUT: %f %f %f", q_out(0), q_out(1), q_out(2));
 
             initRun = true;
         }
 
         return (ik_valid >= 0);
+    }
+
+    bool Leg::doIK(KDL::Vector target) {
+        targetPosition = target;
+        return doIK();
     }
 }
