@@ -30,12 +30,6 @@ namespace Mildred {
             legs.emplace_back(leg);
         }
 
-        /**
-         * Set the startup, default gait
-         * NOTE: This is probably going to change as a startup routine is implemented
-         */
-        setGait(CONTINUOUS, RIPPLE);
-
         return true;
     }
 
@@ -45,59 +39,9 @@ namespace Mildred {
         }
     }
 
-    void Body::setGait(Mildred::EGaitShape shape, Mildred::EGaitSequence sequence) {
-        switch (shape) {
-            case CONTINUOUS:
-            default:
-                gait = std::make_shared<Mildred::ContinuousGait>(sequence);
-                break;
-        }
-
-        /**
-         * Setup the gait
-         * NOTE Is this really needed or just the constructor would be enough?
-         */
-        gait->setup();
-
-        /**
-         * Assign the gait to each leg
-         * NOTE Is this really needed, do the legs need to know the gait?
-         */
+    void Body::tick(double now, double delta) {
         for (const auto &leg:legs) {
-            leg->setGait(gait);
-        }
-    }
-
-    void Body::tick() {
-        // A check is first made to see if an axis' value is 0.00 because the Norm()
-        // method doesn't check that and returns NaN.
-        if (velocity.x() == 0.00) {
-            speed = fabs(velocity.y());
-        } else if (velocity.y() == 0.00) {
-            speed = fabs(velocity.x());
-        } else {
-            speed = fabs(velocity.Norm());
-        }
-
-        // fmin to 1.0 because the PS3 remote doesn't go in a circle
-        // but rather in a square with rounded corners at about x=0.9, y=0.9
-        speed = fmin(speed, 1.00);
-        direction = atan2(velocity.y(), velocity.x());
-
-        ROS_DEBUG("Speed: %f Direction: %f", speed, direction);
-
-        gait->prepare(speed, direction);
-
-        /**
-         * Compute Gait and IK on each leg
-         */
-        for (const auto &leg:legs) {
-            KDL::Vector gaitStep = leg->doGait();
-            KDL::Vector positionInBody = frame * gaitStep;
-            ROS_DEBUG_STREAM("Leg " << leg->name << ":");
-            ROS_DEBUG_STREAM(" - Gait: " << gaitStep.x() << ", " << gaitStep.y() << ", " << gaitStep.z());
-            ROS_DEBUG_STREAM(" - Body: " << positionInBody.x() << ", " << positionInBody.y() << ", " << positionInBody.z());
-            leg->doIK(positionInBody);
+            leg->tick(now, delta);
         }
     }
 }

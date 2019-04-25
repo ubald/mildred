@@ -17,7 +17,6 @@ namespace Mildred {
     bool IdleState::onExit(const Mildred::Event &event) {
         for (auto const &leg:control->body->legs) {
             for (auto &joint:leg->joints) {
-                std::cout << joint.targetPosition << " | " << joint.currentPosition << std::endl;
                 joint.targetPosition = joint.currentPosition;
             }
         }

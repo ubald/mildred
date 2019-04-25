@@ -5,6 +5,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <mildred_core/RemoteControlMessage.h>
+
 #include "Event.h"
 
 namespace Mildred {
@@ -19,6 +21,7 @@ namespace Mildred {
             virtual bool onEnter(const Event &event) { return true; }
             virtual bool onExit(const Event &event) { return true; };
             virtual void tick(double now, double delta) {};
+            virtual void handleControl(const mildred_core::RemoteControlMessage::ConstPtr &controlMessage) {};
 
         protected:
             State() = default;

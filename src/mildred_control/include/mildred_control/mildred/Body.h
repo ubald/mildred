@@ -21,22 +21,13 @@ namespace Mildred {
 
             bool setup(std::shared_ptr<urdf::Model> model, uint8_t legCount, std::string legTipPrefix);
             void setJointState(const sensor_msgs::JointState::ConstPtr &jointState);
-            void setGait(Mildred::EGaitShape shape, Mildred::EGaitSequence sequence);
 
-            void turnActuatorsOff();
-
-            void tick();
+            void tick(double now, double delta);
 
             std::vector<std::shared_ptr<Mildred::Leg>> legs;
 
-            KDL::Rotation rotation;
-            KDL::Frame    frame;
-            KDL::Vector2  velocity;
+            KDL::Frame frame;
 
         protected:
-            std::shared_ptr<Mildred::Gait> gait{nullptr};
-
-            double speed;
-            double direction;
     };
 }

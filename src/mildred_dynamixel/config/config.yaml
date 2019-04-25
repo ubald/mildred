@@ -5,7 +5,7 @@ common:
     Drive_Mode: 0
     Operating_Mode: 3
     Acceleration_Limit: 0
-    Velocity_Limit: 128
+    Velocity_Limit: 0
     Profile_Velocity: 0
     Profile_Acceleration: 0
     Homing_Offset: 0

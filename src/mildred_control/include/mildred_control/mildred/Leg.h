@@ -16,6 +16,7 @@
 #include <kdl/chainfksolverpos_recursive.hpp>
 #include <kdl/chainiksolverpos_nr.hpp>
 //#include <kdl/chainiksolverpos_nr_jl.hpp>
+#include <tf2/LinearMath/Vector3.h>
 
 #include "mildred_core/mildred.h"
 #include "mildred_control/gait/Gait.h"
@@ -62,6 +63,8 @@ namespace Mildred {
              */
             bool setup(std::shared_ptr<urdf::Model> model, std::unique_ptr<KDL::Chain> chain, std::string tip);
 
+            void tick(double now, double delta);
+
             void setJointState(const sensor_msgs::JointState::ConstPtr &jointState);
 
             /**
@@ -71,11 +74,12 @@ namespace Mildred {
              */
             void setGait(std::shared_ptr<Mildred::Gait> gait);
 
-            KDL::Vector    targetPosition;
             KDL::Frame     frame;
+            KDL::Vector    targetPosition;
             Mildred::Joint joints[DOF];
+
             KDL::Vector doGait();
-            bool doFK();
+            std::pair<bool, KDL::Vector> doFK();
             bool doIK();
             bool doIK(KDL::Vector target);
 

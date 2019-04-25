@@ -92,14 +92,16 @@ bool DynamixelController::getDynamixelJointsInfo() {
         jointConfig.multiplier = joint["multiplier"].as<double>();
         jointConfigs.emplace(dxlId, jointConfig);
 
-        ROS_DEBUG_STREAM(name << ": id(" << dxlId << "):");
+        ROS_INFO_STREAM(name << ": id(" << dxlId << "):");
+        ROS_INFO_STREAM("    offset: " << jointConfig.offset);
+        ROS_INFO_STREAM("    multiplier: " << jointConfig.multiplier);
 
         auto newJointConfig = dxlConfig.emplace(name, std::unordered_map<std::string, uint32_t>());
 
         for (const auto property: joint["dxl"]) {
             auto field = property.first.as<std::string>();
             auto value = property.second.as<uint32_t>();
-            ROS_DEBUG_STREAM("    " << field << ": " << value);
+            ROS_INFO_STREAM("    " << field << ": " << value);
             newJointConfig.first->second.emplace(field, value);
         }
     }
@@ -300,10 +302,8 @@ void DynamixelController::publishCallback(const ros::TimerEvent &) {
     for (auto const &dxl:dxlIds) {
         JointConfig jointConfig = jointConfigs.at(dxl.second);
 
-        auto position = static_cast<int32_t>(dynamixelStates.dynamixel_state[idCount].present_position * jointConfig.multiplier + jointConfig.offset);
-
         jointState.name.push_back(dxl.first);
-        jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(dxl.second, position));
+        jointState.position.push_back(dynamixelWorkbench->convertValue2Radian(dxl.second, dynamixelStates.dynamixel_state[idCount].present_position) * jointConfig.multiplier + jointConfig.offset);
         jointState.velocity.push_back(dynamixelWorkbench->convertValue2Velocity(dxl.second, dynamixelStates.dynamixel_state[idCount].present_velocity));
         jointState.effort.push_back(dynamixelWorkbench->convertValue2Load((int16_t) dynamixelStates.dynamixel_state[idCount].present_current)); // TODO: mA != N
         idCount++;

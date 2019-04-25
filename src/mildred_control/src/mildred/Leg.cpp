@@ -33,7 +33,6 @@ namespace Mildred {
 
         // Count joints and check that chain isn't broken
         auto modelLink = model->getLink(tip);
-
         while (modelLink && modelLink->parent_joint) {
             if (modelLink->parent_joint->type != urdf::Joint::UNKNOWN && modelLink->parent_joint->type != urdf::Joint::FIXED) {
                 jointCount++;
@@ -99,6 +98,10 @@ namespace Mildred {
         return true;
     }
 
+    void Leg::tick(double now, double delta) {
+        // noop
+    }
+
     void Leg::setJointState(const sensor_msgs::JointState::ConstPtr &jointState) {
         for (auto &joint:joints) {
             joint.setJointState(jointState);
@@ -115,22 +118,22 @@ namespace Mildred {
         return positionInLegFrame;
     }
 
-    bool Leg::doFK() {
-        KDL::JntArray q_in(jointCount);
+    std::pair<bool, KDL::Vector> Leg::doFK() {
+        KDL::JntArray     q_in(jointCount);
         for (unsigned int i = 0; i < jointCount; ++i) {
             q_in(i) = joints[i].currentPosition;
         }
 
         KDL::Frame p_out;
-        int fk_valid = fk_solver->JntToCart(q_in, p_out);
+        int        fk_valid = fk_solver->JntToCart(q_in, p_out);
         if (fk_valid >= 0) {
             ROS_DEBUG("P_OUT: %f %f %f", p_out.p.x(), p_out.p.y(), p_out.p.z());
-            return true;
+            return std::make_pair(true, p_out.p);
         } else {
             ROS_WARN("FK Solution not found for : %s, error: %d", name.c_str(), fk_valid);
             ROS_DEBUG("FK POS: %f %f %f", q_in(0), q_in(1), q_in(2));
             ROS_DEBUG("P_OUT: %f %f %f", p_out.p.x(), p_out.p.y(), p_out.p.z());
-            return false;
+            return std::make_pair(false, p_out.p);
         }
     }
 

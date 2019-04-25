@@ -5,6 +5,7 @@
 #include "mildred/states/IdleState.h"
 #include "mildred/states/StandingState.h"
 #include "mildred/states/SittingState.h"
+#include "mildred/states/WalkingState.h"
 
 namespace Mildred {
 
@@ -24,6 +25,7 @@ namespace Mildred {
         auto idle     = std::make_shared<IdleState>(this);
         auto sitting  = std::make_shared<SittingState>(this);
         auto standing = std::make_shared<StandingState>(this);
+        auto walking = std::make_shared<WalkingState>(this);
 
         machine.addState(idle, true);
         machine.addState(sitting);
@@ -60,6 +62,7 @@ namespace Mildred {
         double delta = lastTime > 0 ? now - lastTime : 0.00f;
         lastTime = now;
 
+        body->tick(now, delta);
         machine.tick(now, delta);
 
         #ifdef VIZ_DEBUG
@@ -106,19 +109,7 @@ namespace Mildred {
     }
 
     void MildredControl::controlMessageCallback(const mildred_core::RemoteControlMessage::ConstPtr &controlMessage) {
-        body->velocity = KDL::Vector2(controlMessage->velocity.x, controlMessage->velocity.y);
-        //body->frame    = KDL::Frame(
-        //    KDL::Rotation::RPY(
-        //        controlMessage->rotation.y * (M_PI / 8), //TODO: Dynamically adjust maximum rotation
-        //        controlMessage->rotation.x * (M_PI / 8), //TODO: Dynamically adjust maximum rotation
-        //        controlMessage->rotation.z * (M_PI / 8)  //TODO: Dynamically adjust maximum rotation
-        //    ),
-        //    KDL::Vector(
-        //        controlMessage->position.x / 10.00, //TODO: Dynamically adjust maximum position
-        //        controlMessage->position.y / 10.00, //TODO: Dynamically adjust maximum position
-        //        controlMessage->position.z / 10.00  //TODO: Dynamically adjust maximum position
-        //    )
-        //);
+        machine.handleControl(controlMessage);
     }
 
     void MildredControl::jointsStatesCallback(const sensor_msgs::JointState::ConstPtr &jointStatesMessage) {

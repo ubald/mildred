@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <vector>
 
+#include <mildred_core/RemoteControlMessage.h>
+
 #include "Event.h"
 #include "State.h"
 #include "Transition.h"
@@ -52,6 +54,14 @@ namespace Mildred {
                 }
 
                 currentState = std::any_cast<std::shared_ptr<BaseTransition<E>>>(transition->second)->transit(event);
+            }
+
+            void handleControl(const mildred_core::RemoteControlMessage::ConstPtr &controlMessage) {
+                if (currentState == nullptr) {
+                    return;
+                }
+
+                currentState->handleControl(controlMessage);
             }
 
             void tick(double now, double delta);
