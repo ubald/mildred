@@ -4,7 +4,7 @@
 
 namespace Mildred {
     StandingState::StandingState(MildredControl *control) :
-        State(),
+        State(MildredState::Standing, "standing"),
         control(control) {}
 
     bool StandingState::onEnter(const Event &event) {

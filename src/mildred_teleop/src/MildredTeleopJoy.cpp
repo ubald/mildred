@@ -4,10 +4,15 @@ namespace Mildred {
     MildredTeleopJoy::MildredTeleopJoy(std::size_t buttonCount, std::size_t axesCount) :
         MildredTeleop(),
         lastButtonValue(buttonCount, false),
+        buttonChanged(buttonCount, false),
         lastAxisValue(axesCount, 0.00f),
         axisChanged(axesCount, false) {
         joySubscriber = nodeHandle.subscribe("/joy", 1, &MildredTeleopJoy::joyCallback, this);
         joyFeedbackPublisher = nodeHandle.advertise<sensor_msgs::JoyFeedbackArray>("/joy/set_feedback", 1);
+    }
+
+    bool MildredTeleopJoy::buttonPressed(uint8_t button) const {
+        return buttonChanged[button] && lastButtonValue[button];
     }
 
     void MildredTeleopJoy::joyCallback(sensor_msgs::Joy joyMsg) {
@@ -22,13 +27,10 @@ namespace Mildred {
 
         for (int i = 0; i < buttonCount; ++i) {
             if (joyMsg.buttons[i] != lastButtonValue[i]) {
-                if (joyMsg.buttons[i]) {
-                    ROS_DEBUG("Button pressed");
-                } else {
-                    ROS_DEBUG("Button released");
-                }
-
+                buttonChanged[i] = true;
                 lastButtonValue[i] = joyMsg.buttons[i] != 0;
+            } else {
+                buttonChanged[i] = false;
             }
         }
 

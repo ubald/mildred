@@ -9,11 +9,9 @@ namespace Mildred {
             WalkingState(MildredControl * control);
             ~WalkingState() = default;
 
-            std::string name() const override { return "walking"; }
-
             bool onEnter(const Event &event) override;
             void tick(double now, double delta) override;
-            void handleControl(const mildred_core::RemoteControlMessage::ConstPtr &controlMessage) override;
+            void handleControl(const mildred_core::MildredControlMessage::ConstPtr &controlMessage) override;
 
         protected:
             MildredControl *control{nullptr};

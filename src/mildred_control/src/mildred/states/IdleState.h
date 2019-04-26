@@ -10,9 +10,6 @@ namespace Mildred {
         public:
             IdleState(MildredControl * control);
             ~IdleState() = default;
-
-            std::string name() const override { return "idle"; }
-
             bool onEnter(const Event &event) override;
             bool onExit(const Event &event) override;
 

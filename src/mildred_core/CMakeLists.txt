@@ -50,9 +50,11 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
     FILES
     ActuatorsStateMessage.msg
+    MildredCommandMessage.msg
+    MildredControlMessage.msg
+    MildredStateMessage.msg
     Point2D.msg
     Point3D.msg
-    RemoteControlMessage.msg
 )
 
 ## Generate services in the 'srv' folder

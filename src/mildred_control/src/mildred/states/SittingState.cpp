@@ -2,6 +2,6 @@
 
 namespace Mildred {
     SittingState::SittingState(MildredControl * control) :
-        State(),
+        State(MildredState::Sitting, "sitting"),
         control(control){}
 }

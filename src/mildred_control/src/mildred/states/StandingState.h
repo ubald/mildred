@@ -14,8 +14,6 @@ namespace Mildred {
             StandingState(MildredControl * control);
             ~StandingState() = default;
 
-            std::string name() const override { return "standing"; }
-
             bool onEnter(const Event &event) override;
             bool onExit(const Event &event) override;
             void tick(double now, double delta) override;

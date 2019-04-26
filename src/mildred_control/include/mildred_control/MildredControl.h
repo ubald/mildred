@@ -11,46 +11,51 @@
 #include <geometry_msgs/Point.h>
 #include <visualization_msgs/Marker.h>
 
-#include "mildred_control/fsm/Machine.h"
-#include "mildred_core/mildred.h"
-#include "mildred_core/RemoteControlMessage.h"
-
-#include "mildred_control/mildred/Body.h"
+#include <mildred_control/fsm/Machine.h>
+#include <mildred_control/mildred/Body.h>
+#include <mildred_core/mildred.h>
+#include <mildred_core/MildredCommandMessage.h>
+#include <mildred_core/MildredControlMessage.h>
 
 namespace Mildred {
 
     class MildredControl {
-        public:
-            MildredControl();
-            ~MildredControl() = default;
+      public:
+        MildredControl();
+        ~MildredControl() = default;
 
-            bool init();
-            void loop();
+        bool init();
+        void loop();
 
-            ros::Publisher                 actuatorsStatePublisher;
-            std::unique_ptr<Mildred::Body> body{nullptr};
+        std::unique_ptr<Mildred::Body> body{nullptr};
 
-            bool publishJointPositions = false;
+        void setActuatorState(bool on);
+        bool publishJointPositions = false;
 
-        private:
-            ros::NodeHandle nodeHandle;
+      private:
+        ros::NodeHandle nodeHandle;
 
-            ros::Subscriber             controlSubscriber;
-            ros::Subscriber             jointStatesSubscriber;
-            ros::Publisher              targetJointPositionPublisher;
-            std_msgs::Float64MultiArray targetJointPositionMessage;
+        ros::Publisher actuatorsStatePublisher;
+        ros::Publisher mildredStatePublisher;
 
-            Mildred::Machine machine;
+        ros::Subscriber             commandSubscriber;
+        ros::Subscriber             controlSubscriber;
+        ros::Subscriber             jointStatesSubscriber;
+        ros::Publisher              targetJointPositionPublisher;
+        std_msgs::Float64MultiArray targetJointPositionMessage;
 
-            double lastTime = 0;
-            bool hasState = false;
+        Mildred::Machine machine;
 
-            void controlMessageCallback(const mildred_core::RemoteControlMessage::ConstPtr &controlMessage);
-            void jointsStatesCallback(const sensor_msgs::JointState::ConstPtr &jointStatesMessage);
+        double lastTime = 0;
+        bool   hasState = false;
 
-            #ifdef VIZ_DEBUG
-            ros::Publisher targetMarkersPublisher;
-            #endif
+        void commandMessageCallback(const mildred_core::MildredCommandMessage::ConstPtr &controlMessage);
+        void controlMessageCallback(const mildred_core::MildredControlMessage::ConstPtr &controlMessage);
+        void jointsStatesCallback(const sensor_msgs::JointState::ConstPtr &jointStatesMessage);
+
+        #ifdef VIZ_DEBUG
+        ros::Publisher targetMarkersPublisher;
+        #endif
     };
 
 }

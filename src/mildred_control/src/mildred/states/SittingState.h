@@ -9,8 +9,6 @@ namespace Mildred {
             SittingState(MildredControl * control);
             ~SittingState() = default;
 
-            std::string name() const override { return "sitting"; }
-
         protected:
             MildredControl *control{nullptr};
     };

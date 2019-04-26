@@ -2,7 +2,7 @@
 
 namespace Mildred {
     WalkingState::WalkingState(MildredControl * control) :
-        State(),
+        State(MildredState::Walking, "walking"),
         control(control){}
 
     bool WalkingState::onEnter(const Event &event) {
@@ -26,7 +26,7 @@ namespace Mildred {
         }
     }
 
-    void WalkingState::handleControl(const mildred_core::RemoteControlMessage::ConstPtr &controlMessage) {
+    void WalkingState::handleControl(const mildred_core::MildredControlMessage::ConstPtr &controlMessage) {
         auto velocity = KDL::Vector2(controlMessage->velocity.x, controlMessage->velocity.y);
 
         // A check is first made to see if an axis' value is 0.00 because the Norm()

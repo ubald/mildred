@@ -1,6 +1,8 @@
-#include "mildred_control/MildredControl.h"
+#include <mildred_control/MildredControl.h>
 
-#include "mildred_core/ActuatorsStateMessage.h"
+#include <mildred_core/ActuatorsStateMessage.h>
+#include <mildred_core/MildredCommandMessage.h>
+#include <mildred_core/MildredStateMessage.h>
 
 #include "mildred/states/IdleState.h"
 #include "mildred/states/StandingState.h"
@@ -13,10 +15,13 @@ namespace Mildred {
         nodeHandle(),
         body(std::make_unique<Mildred::Body>()) {
 
+        commandSubscriber            = nodeHandle.subscribe("command", 1, &MildredControl::commandMessageCallback, this);
         controlSubscriber            = nodeHandle.subscribe("control", 1, &MildredControl::controlMessageCallback, this);
         jointStatesSubscriber        = nodeHandle.subscribe("joint_states", 1, &MildredControl::jointsStatesCallback, this);
+
         targetJointPositionPublisher = nodeHandle.advertise<std_msgs::Float64MultiArray>("joint_position_controller/command", 1);
         actuatorsStatePublisher      = nodeHandle.advertise<mildred_core::ActuatorsStateMessage>("actuators_state", 1, true);
+        mildredStatePublisher        = nodeHandle.advertise<mildred_core::MildredStateMessage>("mildred_state", 1, true);
 
         #ifdef VIZ_DEBUG
         targetMarkersPublisher = nodeHandle.advertise<visualization_msgs::Marker>("visualization_marker", 1);
@@ -25,7 +30,7 @@ namespace Mildred {
         auto idle     = std::make_shared<IdleState>(this);
         auto sitting  = std::make_shared<SittingState>(this);
         auto standing = std::make_shared<StandingState>(this);
-        auto walking = std::make_shared<WalkingState>(this);
+        auto walking  = std::make_shared<WalkingState>(this);
 
         machine.addState(idle, true);
         machine.addState(sitting);
@@ -36,6 +41,12 @@ namespace Mildred {
 
         machine.addTransition<Ragdoll>(sitting, idle);
         machine.addTransition<Ragdoll>(standing, idle);
+
+        machine.onStateChange = [this](std::shared_ptr<State> state) {
+            mildred_core::MildredStateMessage message;
+            message.state = static_cast<decltype(message.state)>(state->id());
+            mildredStatePublisher.publish(message);
+        };
     }
 
     bool MildredControl::init() {
@@ -58,7 +69,7 @@ namespace Mildred {
     }
 
     void MildredControl::loop() {
-        double now = ros::Time::now().toSec();
+        double now   = ros::Time::now().toSec();
         double delta = lastTime > 0 ? now - lastTime : 0.00f;
         lastTime = now;
 
@@ -108,7 +119,32 @@ namespace Mildred {
         #endif
     }
 
-    void MildredControl::controlMessageCallback(const mildred_core::RemoteControlMessage::ConstPtr &controlMessage) {
+    void MildredControl::setActuatorState(bool on) {
+        mildred_core::ActuatorsStateMessage message;
+        message.state = static_cast<decltype(message.state)>(on ? 1 : 0);
+        actuatorsStatePublisher.publish(message);
+        publishJointPositions = on;
+    }
+
+    void MildredControl::commandMessageCallback(const mildred_core::MildredCommandMessage::ConstPtr &commandMessage) {
+        auto command = static_cast<MildredCommand>(commandMessage->command);
+        switch (command) {
+            case MildredCommand::Ragdoll:
+                machine.handleEvent(Ragdoll());
+                break;
+            case MildredCommand::Sit:
+                machine.handleEvent(Sit());
+                break;
+            case MildredCommand::Stand:
+                machine.handleEvent(Stand());
+                break;
+            case MildredCommand::Walk:
+                machine.handleEvent(Walk());
+                break;
+        }
+    }
+
+    void MildredControl::controlMessageCallback(const mildred_core::MildredControlMessage::ConstPtr &controlMessage) {
         machine.handleControl(controlMessage);
     }
 
@@ -121,9 +157,10 @@ namespace Mildred {
         body->setJointState(jointStatesMessage);
 
         if (!hasState) {
-            // First state message
+            mildred_core::MildredStateMessage message;
+            message.state = static_cast<decltype(message.state)>(machine.state()->id());
+            mildredStatePublisher.publish(message);
             hasState = true;
-            machine.handleEvent(Stand());
         }
     }
 
