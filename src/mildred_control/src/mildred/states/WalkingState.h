@@ -1,6 +1,8 @@
 #pragma once
 
 #include "mildred_control/mildred/states/ControlState.h"
+#include "mildred_control/gait/gaits.h"
+#include "mildred_control/gait/Gait.h"
 
 namespace Mildred {
     class WalkingState : public ControlState {
@@ -13,8 +15,8 @@ namespace Mildred {
         void handleControl(const mildred_core::MildredControlMessage::ConstPtr &controlMessage) override;
 
       protected:
-        void setGait(Mildred::EGaitShape shape, Mildred::EGaitSequence sequence);
-        std::shared_ptr<Mildred::Gait> gait{nullptr};
+        void setGait(GaitShape shape, GaitSequence sequence);
+        std::shared_ptr<Gait> gait{nullptr};
 
         double targetSpeed;
         double targetDirection;

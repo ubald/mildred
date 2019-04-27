@@ -1,5 +1,3 @@
-#include <mildred_control/MildredControl.h>
-
 #include "IdleState.h"
 
 namespace Mildred {

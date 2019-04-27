@@ -2,8 +2,9 @@
 
 #include <kdl/frames.hpp>
 
+#include <mildred_control/mildred/states/ControlState.h>
+
 #include "events.h"
-#include "mildred_control/mildred/states/ControlState.h"
 
 namespace Mildred {
     class StandingState : public ControlState {

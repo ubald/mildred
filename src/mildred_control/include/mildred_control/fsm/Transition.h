@@ -30,7 +30,7 @@ namespace Mildred {
         std::shared_ptr<S> transit(const E &event) override {
             std::cout << "Attempting transition from state " << fromState->name() << " to state " << toState->name() << std::endl;
 
-            if (std::static_pointer_cast<State>(fromState) == std::static_pointer_cast<State>(toState)) {
+            if (std::static_pointer_cast<S>(fromState) == std::static_pointer_cast<S>(toState)) {
                 std::cout << " - States are the same, no transition possible";
                 return nullptr;
             }

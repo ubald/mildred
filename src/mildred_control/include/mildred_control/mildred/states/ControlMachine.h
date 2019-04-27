@@ -5,7 +5,7 @@
 
 namespace Mildred {
     class ControlState;
-    class ControlMachine: public Machine<ControlState,ControlMachine> {
+    class ControlMachine : public Machine<ControlMachine, ControlState> {
       public:
         void handleControl(const mildred_core::MildredControlMessage::ConstPtr &controlMessage);
     };

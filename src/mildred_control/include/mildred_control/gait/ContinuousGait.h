@@ -4,15 +4,15 @@
 
 namespace Mildred {
 
-    class ContinuousGait : public Mildred::Gait {
+    class ContinuousGait : public Gait {
     public:
-        explicit ContinuousGait(Mildred::EGaitSequence sequence);
+        explicit ContinuousGait(GaitSequence sequence);
         ~ContinuousGait() = default;
 
         void setup() override;
 
     protected:
-        KDL::Vector calculate(Mildred::GaitConfig &legGait) override;
+        KDL::Vector calculate(GaitConfig &legGait) override;
         double posx;
         double posy;
         double posz;

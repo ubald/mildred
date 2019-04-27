@@ -1,6 +1,7 @@
 #pragma once
 
 #include <any>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <typeindex>
@@ -8,14 +9,12 @@
 #include <type_traits>
 #include <vector>
 
-#include <mildred_core/MildredControlMessage.h>
-
 #include "Event.h"
 #include "State.h"
 #include "Transition.h"
 
 namespace Mildred {
-    template<class S, class M>
+    template<class M, class S>
     class Machine {
       public:
         Machine() = default;
@@ -25,8 +24,8 @@ namespace Mildred {
             return currentState;
         }
 
-        void addState(const std::shared_ptr<S> &state, bool initial = false) {
-            state->machine = this;
+        M* addState(const std::shared_ptr<S> &state, bool initial = false) {
+            state->machine = static_cast<M*>(this);
             states.push_back(state);
 
             if (initial) {
@@ -34,6 +33,15 @@ namespace Mildred {
                 currentState->onEnter(Event());
                 notifyStateChange();
             }
+
+            return static_cast<M*>(this);
+        }
+
+        template<typename T, typename... Args>
+        std::shared_ptr<T> addState(Args &&... args) {
+            auto state = std::make_shared<T>(std::forward<Args>(args)...);
+            std::static_pointer_cast<T>(addState(state));
+            return state;
         }
 
         template<
@@ -43,9 +51,10 @@ namespace Mildred {
             typename = std::enable_if<std::is_base_of<Event, E>::value>,
             typename = std::enable_if<std::is_base_of<std::shared_ptr<S>, FS>::value>,
             typename = std::enable_if<std::is_base_of<std::shared_ptr<S>, TS>::value>>
-        void addTransition(std::shared_ptr<FS> fromState, std::shared_ptr<TS> toState) {
+        M* addTransition(std::shared_ptr<FS> fromState, std::shared_ptr<TS> toState) {
             std::cout << "Adding transition from state " << fromState->name() << " to state " << toState->name() << " for event " << typeid(E).name() << " (" << typeid(E).hash_code() << ")" << std::endl;
             transitions[fromState].emplace(typeid(E), std::static_pointer_cast<BaseTransition<S, E>>(std::make_shared<Transition<S, E, FS, TS>>(fromState, toState)));
+            return static_cast<M*>(this);
         }
 
         template<class E, typename = std::enable_if<std::is_base_of<Event, E>::value>>

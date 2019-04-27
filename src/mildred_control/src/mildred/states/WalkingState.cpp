@@ -58,11 +58,11 @@ namespace Mildred {
         //);
     }
 
-    void WalkingState::setGait(Mildred::EGaitShape shape, Mildred::EGaitSequence sequence) {
+    void WalkingState::setGait(GaitShape shape, GaitSequence sequence) {
         switch (shape) {
             case CONTINUOUS:
             default:
-                gait = std::make_shared<Mildred::ContinuousGait>(sequence);
+                gait = std::make_shared<ContinuousGait>(sequence);
                 break;
         }
 

@@ -4,7 +4,7 @@
 #include <kdl/frames.hpp>
 
 namespace Mildred {
-    enum EGaitSequence {
+    enum GaitSequence {
         TRIPOD,
         WAVE,
         RIPPLE
@@ -19,15 +19,15 @@ namespace Mildred {
     public:
         virtual void setup() = 0;
         virtual void prepare(double speed, double direction);
-        virtual KDL::Vector walk(Mildred::GaitConfig &legGait);
+        virtual KDL::Vector walk(GaitConfig &legGait);
 
         double getSpeed() const { return speed; }
         double getDirection() const { return direction; }
 
     protected:
-        explicit Gait(Mildred::EGaitSequence sequence);
+        explicit Gait(GaitSequence sequence);
         //virtual ~Gait();
-        virtual KDL::Vector calculate(Mildred::GaitConfig &legGait) = 0;
+        virtual KDL::Vector calculate(GaitConfig &legGait) = 0;
 
         static constexpr const double cycleDuration = 1.00; // Duration of a cycle, PI could be used also
 

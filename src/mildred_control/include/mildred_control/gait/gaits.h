@@ -4,7 +4,7 @@
 #include "ContinuousGait.h"
 
 namespace Mildred {
-    enum EGaitShape {
+    enum GaitShape {
         CONTINUOUS
     };
 }

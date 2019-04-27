@@ -17,7 +17,6 @@
 #include <mildred_control/mildred/Body.h>
 #include <mildred_control/mildred/states/ControlMachine.h>
 
-
 namespace Mildred {
     class MildredControl {
       public:

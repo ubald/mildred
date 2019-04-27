@@ -1,7 +1,7 @@
 #include "mildred_control/gait/Gait.h"
 
 namespace Mildred {
-    Gait::Gait(Mildred::EGaitSequence sequence) {
+    Gait::Gait(GaitSequence sequence) {
         switch (sequence) {
             case TRIPOD:
                 flightTime = 0.50; // Percentage of the time the leg is in the air
@@ -63,7 +63,7 @@ namespace Mildred {
         }
     }
 
-    KDL::Vector Gait::walk(Mildred::GaitConfig &legGait) {
+    KDL::Vector Gait::walk(GaitConfig &legGait) {
         cyclePosition = (cycleTime / cycleDuration) + timing[legGait.index];
         if (cyclePosition > 1.00) {
             cyclePosition = cyclePosition - 1;

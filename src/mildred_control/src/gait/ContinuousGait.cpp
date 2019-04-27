@@ -1,7 +1,7 @@
 #include "mildred_control/gait/ContinuousGait.h"
 
 namespace Mildred {
-    ContinuousGait::ContinuousGait(Mildred::EGaitSequence sequence) :
+    ContinuousGait::ContinuousGait(GaitSequence sequence) :
         Gait::Gait(sequence) {
         cycleTimeMultiplier = 2.500;
         stepLength          = 0.100;
@@ -14,7 +14,7 @@ namespace Mildred {
         Gait::setup();
     }
 
-    KDL::Vector ContinuousGait::calculate(Mildred::GaitConfig &legGait) {
+    KDL::Vector ContinuousGait::calculate(GaitConfig &legGait) {
         double stanceDuration = 1 - flightTime;
 
         if (cyclePosition <= stanceDuration) {
