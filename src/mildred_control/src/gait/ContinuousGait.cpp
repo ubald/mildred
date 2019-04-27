@@ -5,9 +5,9 @@ namespace Mildred {
         Gait::Gait(sequence) {
         cycleTimeMultiplier = 2.500;
         stepLength          = 0.100;
-        stepHeight          = 0.075;
+        stepHeight          = 0.100;
         bodyHeight          = 0.100;
-        radius              = 0.2;
+        radius              = 0.150;
     }
 
     void ContinuousGait::setup() {

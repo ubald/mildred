@@ -23,7 +23,7 @@
 
     <!-- Load controllers -->
     <node name="mildred_controller_spawner" pkg="controller_manager" type="spawner" respawn="true" output="screen"
-          ns="/mildred"
+          ns="mildred"
           args="joint_state_controller
                 joint_position_controller"/>
 

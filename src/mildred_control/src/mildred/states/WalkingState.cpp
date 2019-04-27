@@ -4,7 +4,7 @@ namespace Mildred {
     WalkingState::WalkingState(MildredControl *control) : ControlState(MildredState::Walking, "walking", control) {}
 
     bool WalkingState::onEnter(const Event &event) {
-        setGait(CONTINUOUS, RIPPLE);
+        setGait(CONTINUOUS, TRIPOD);
         return true;
     }
 

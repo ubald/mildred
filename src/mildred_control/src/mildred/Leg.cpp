@@ -138,19 +138,19 @@ namespace Mildred {
     }
 
     bool Leg::doIK() {
-        if (initRun) {
+        //if (initRun) {
             q_init(0) = 0.00;
             q_init(1) = -M_PI_2;
             q_init(2) = 3 * M_PI_4;
-        } else {
-            //Get the current joint positions (our array is base->tip, IK works with tip->base)
-            std::string       debug;
-            for (unsigned int i = 0; i < jointCount; ++i) {
-                debug += std::to_string(i) + ": " + std::to_string(joints[i].currentPosition) + " ";
-                q_init(i) = joints[i].currentPosition;
-            }
-            ROS_DEBUG_STREAM(" -  CJP: " << debug);
-        }
+        //} else {
+        //    //Get the current joint positions (our array is base->tip, IK works with tip->base)
+        //    std::string       debug;
+        //    for (unsigned int i = 0; i < jointCount; ++i) {
+        //        debug += std::to_string(i) + ": " + std::to_string(joints[i].currentPosition) + " ";
+        //        q_init(i) = joints[i].currentPosition;
+        //    }
+        //    ROS_DEBUG_STREAM(" -  CJP: " << debug);
+        //}
 
         int ik_valid = ik_solver_pos->CartToJnt(q_init, KDL::Frame(targetPosition), q_out);
 

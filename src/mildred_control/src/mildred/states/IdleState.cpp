@@ -17,7 +17,8 @@ namespace Mildred {
             }
         }
 
-        control_->setActuatorState(false);
+        control_->setActuatorState(true);
+
         return true;
     }
 }
