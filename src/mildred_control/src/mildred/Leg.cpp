@@ -11,9 +11,9 @@ namespace Mildred {
     bool Leg::setup(std::shared_ptr<urdf::Model> model, std::unique_ptr<KDL::Chain> legChain, std::string tip) {
         chain = std::move(legChain);
 
-        ROS_INFO("Setting up leg \"%s\" with tip \"%s\"", name.c_str(), tip.c_str());
+        ROS_DEBUG("Setting up leg \"%s\" with tip \"%s\"", name.c_str(), tip.c_str());
         for (const auto &segment:chain->segments) {
-            ROS_INFO_STREAM("  - " << segment.getJoint().getName() << "(" << segment.getJoint().getTypeName() << ")" << " > " << segment.getName());
+            ROS_DEBUG_STREAM("  - " << segment.getJoint().getName() << "(" << segment.getJoint().getTypeName() << ")" << " > " << segment.getName());
         }
 
         // Compose root frame and leg/hip frame
@@ -23,7 +23,7 @@ namespace Mildred {
         // Gait configuration
         double r, p, y;
         frame.M.GetRPY(r, p, y);
-        ROS_INFO("  Alpha: %f", y);
+        ROS_DEBUG("  Alpha: %f", y);
         gaitConfig.alpha = y;
 
         //Initialize the total number of joints
@@ -41,7 +41,7 @@ namespace Mildred {
             modelLink = modelLink->getParent();
         }
 
-        ROS_INFO("Found %d joints", jointCount);
+        ROS_DEBUG("Found %d joints", jointCount);
         jointMinimums.resize(jointCount);
         jointMaximums.resize(jointCount);
         q_init.resize(jointCount);
@@ -54,7 +54,7 @@ namespace Mildred {
             const auto modelJoint = modelLink->parent_joint;
             if (modelJoint->type != urdf::Joint::UNKNOWN && modelJoint->type != urdf::Joint::FIXED) {
                 unsigned int index = jointCount - i - 1;
-                ROS_INFO("Getting bounds for joint %d: %s", index, modelJoint->name.c_str());
+                ROS_DEBUG("Getting bounds for joint %d: %s", index, modelJoint->name.c_str());
 
                 //Save name to our joint object
                 joints[index].name           = modelJoint->name;
@@ -70,10 +70,10 @@ namespace Mildred {
                     upper = M_PI;
                 }
 
-                ROS_INFO_STREAM("  - Lower: " << lower);
+                ROS_DEBUG_STREAM("  - Lower: " << lower);
                 jointMinimums(index) = lower;
 
-                ROS_INFO_STREAM("  - Upper: " << upper);
+                ROS_DEBUG_STREAM("  - Upper: " << upper);
                 jointMaximums(index) = upper;
 
                 i++;

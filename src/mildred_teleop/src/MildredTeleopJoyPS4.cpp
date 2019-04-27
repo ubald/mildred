@@ -13,11 +13,14 @@ namespace Mildred {
 
         switch (state) {
             case MildredState::Unknown:
-                ROS_WARN("State unknown");
+                ROS_WARN("State unknown, waiting for control");
+                break;
+
+            case MildredState::Starting:
+                ROS_WARN("State unknown, waiting for control");
                 break;
 
             case MildredState::Idle:
-                ROS_INFO("Idle");
                 if (buttonPressed(PS4_BUTTON_ACTION_CROSS)) {
                     ROS_INFO("Sending sit command");
                     sendCommand(MildredCommand::Sit);
@@ -25,34 +28,36 @@ namespace Mildred {
                 break;
 
             case MildredState::Sitting:
-                ROS_INFO("Sitting");
                 if (buttonPressed(PS4_BUTTON_ACTION_CROSS)) {
                     ROS_INFO("Sending stand command");
                     sendCommand(MildredCommand::Stand);
-                } else if (buttonPressed(PS4_BUTTON_ACTION_CIRCLE)) {
-                    ROS_INFO("Sending Ragdoll command");
+                } else if (buttonPressed(PS4_BUTTON_ACTION_CIRCLE) || buttonPressed(PS4_BUTTON_ACTION_SQUARE)) {
+                    ROS_INFO("Sending ragdoll command");
                     sendCommand(MildredCommand::Ragdoll);
                 }
                 break;
 
             case MildredState::Standing:
-                ROS_INFO("Standing");
                 if (buttonPressed(PS4_BUTTON_ACTION_CROSS)) {
                     ROS_INFO("Sending walk command");
                     sendCommand(MildredCommand::Walk);
                 } else if (buttonPressed(PS4_BUTTON_ACTION_CIRCLE)) {
                     ROS_INFO("Sending sit command");
                     sendCommand(MildredCommand::Sit);
+                } else if (buttonPressed(PS4_BUTTON_ACTION_SQUARE)) {
+                    ROS_INFO("Sending ragdoll command");
+                    sendCommand(MildredCommand::Ragdoll);
                 }
+                break;
 
             case MildredState::Walking:
-                ROS_INFO("Walking");
                 if (buttonPressed(PS4_BUTTON_ACTION_CIRCLE)) {
                     ROS_INFO("Sending stand command");
                     sendCommand(MildredCommand::Stand);
-                }
-
-                if (axisChanged[PS4_AXIS_STICK_LEFT_X]
+                } else if (buttonPressed(PS4_BUTTON_ACTION_SQUARE)) {
+                    ROS_INFO("Sending ragdoll command");
+                    sendCommand(MildredCommand::Ragdoll);
+                } else if (axisChanged[PS4_AXIS_STICK_LEFT_X]
                     || axisChanged[PS4_AXIS_STICK_LEFT_Y]
                     || axisChanged[PS4_AXIS_STICK_RIGHT_X]
                     || axisChanged[PS4_AXIS_STICK_RIGHT_Y]

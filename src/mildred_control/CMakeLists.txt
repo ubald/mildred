@@ -149,9 +149,12 @@ add_executable(${PROJECT_NAME}
     src/mildred/Body.cpp
     src/mildred/Joint.cpp
     src/mildred/Leg.cpp
+    src/mildred/states/ControlMachine.cpp
+    src/mildred/states/ControlState.cpp
     src/mildred/states/IdleState.cpp
     src/mildred/states/SittingState.cpp
     src/mildred/states/StandingState.cpp
+    src/mildred/states/StartingState.cpp
     src/mildred/states/WalkingState.cpp
     )
 

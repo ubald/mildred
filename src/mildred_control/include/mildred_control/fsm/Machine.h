@@ -15,22 +15,24 @@
 #include "Transition.h"
 
 namespace Mildred {
+    template<class S, class M>
     class Machine {
       public:
         Machine() = default;
         ~Machine() = default;
 
-        std::shared_ptr<State> state() const {
+        std::shared_ptr<S> state() const {
             return currentState;
         }
 
-        void addState(const std::shared_ptr<State> &state, bool initial = false) {
+        void addState(const std::shared_ptr<S> &state, bool initial = false) {
             state->machine = this;
             states.push_back(state);
 
             if (initial) {
                 currentState = state;
                 currentState->onEnter(Event());
+                notifyStateChange();
             }
         }
 
@@ -39,11 +41,11 @@ namespace Mildred {
             class FS,
             class TS,
             typename = std::enable_if<std::is_base_of<Event, E>::value>,
-            typename = std::enable_if<std::is_base_of<std::shared_ptr<State>, FS>::value>,
-            typename = std::enable_if<std::is_base_of<std::shared_ptr<State>, TS>::value>>
+            typename = std::enable_if<std::is_base_of<std::shared_ptr<S>, FS>::value>,
+            typename = std::enable_if<std::is_base_of<std::shared_ptr<S>, TS>::value>>
         void addTransition(std::shared_ptr<FS> fromState, std::shared_ptr<TS> toState) {
             std::cout << "Adding transition from state " << fromState->name() << " to state " << toState->name() << " for event " << typeid(E).name() << " (" << typeid(E).hash_code() << ")" << std::endl;
-            transitions[fromState].emplace(typeid(E), std::static_pointer_cast<BaseTransition<E>>(std::make_shared<Transition<E, FS, TS>>(fromState, toState)));
+            transitions[fromState].emplace(typeid(E), std::static_pointer_cast<BaseTransition<S, E>>(std::make_shared<Transition<S, E, FS, TS>>(fromState, toState)));
         }
 
         template<class E, typename = std::enable_if<std::is_base_of<Event, E>::value>>
@@ -65,21 +67,17 @@ namespace Mildred {
                 return;
             }
 
-            auto newState = std::any_cast<std::shared_ptr<BaseTransition<E>>>(transition->second)->transit(event);
+            auto newState = std::any_cast<std::shared_ptr<BaseTransition<S, E>>>(transition->second)->transit(event);
             if (newState && newState != currentState) {
                 currentState = newState;
-                if (onStateChange) {
-                    onStateChange(currentState);
-                }
+                notifyStateChange();
             }
         }
 
-        void handleControl(const mildred_core::MildredControlMessage::ConstPtr &controlMessage) {
-            if (currentState == nullptr) {
-                return;
+        void notifyStateChange() {
+            if (onStateChange != nullptr) {
+                onStateChange(currentState);
             }
-
-            currentState->handleControl(controlMessage);
         }
 
         void tick(double now, double delta) {
@@ -90,11 +88,11 @@ namespace Mildred {
             currentState->tick(now, delta);
         }
 
-        std::function<void(std::shared_ptr<State> state)> onStateChange{nullptr};
+        std::function<void(std::shared_ptr<S> state)> onStateChange{nullptr};
 
       protected:
-        std::vector<std::shared_ptr<State>>                                                       states;
-        std::shared_ptr<State>                                                                    currentState;
-        std::unordered_map<std::shared_ptr<State>, std::unordered_map<std::type_index, std::any>> transitions;
+        std::vector<std::shared_ptr<S>>                                                       states;
+        std::shared_ptr<S>                                                                    currentState;
+        std::unordered_map<std::shared_ptr<S>, std::unordered_map<std::type_index, std::any>> transitions;
     };
 }

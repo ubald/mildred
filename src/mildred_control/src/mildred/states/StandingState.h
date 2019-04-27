@@ -1,28 +1,25 @@
 #pragma once
 
 #include <kdl/frames.hpp>
-#include <tf2/LinearMath/Vector3.h>
-
-#include <mildred_control/fsm/State.h>
-#include <mildred_control/MildredControl.h>
 
 #include "events.h"
+#include "mildred_control/mildred/states/ControlState.h"
 
 namespace Mildred {
-    class StandingState : public State {
-        public:
-            StandingState(MildredControl * control);
-            ~StandingState() = default;
+    class StandingState : public ControlState {
+      public:
+        StandingState(MildredControl *control);
+        ~StandingState() = default;
 
-            bool onEnter(const Event &event) override;
-            bool onExit(const Event &event) override;
-            void tick(double now, double delta) override;
+        bool onEnter(const Event &event) override;
+        bool onExit(const Ragdoll &event);
+        bool onExit(const Event &event) override;
+        void tick(double now, double delta) override;
 
-        protected:
-            MildredControl *control{nullptr};
+      protected:
+        double startTime = 0.00f;
+        bool   moving    = true;
 
-            double startTime = 0.00f;
-            bool regrouping = true;
-            std::vector<std::pair<KDL::Vector, KDL::Vector>> trajectories;
+        std::vector<std::pair<KDL::Vector, KDL::Vector>> trajectories;
     };
 }

@@ -1,9 +1,7 @@
 #include "WalkingState.h"
 
 namespace Mildred {
-    WalkingState::WalkingState(MildredControl * control) :
-        State(MildredState::Walking, "walking"),
-        control(control){}
+    WalkingState::WalkingState(MildredControl *control) : ControlState(MildredState::Walking, "walking", control) {}
 
     bool WalkingState::onEnter(const Event &event) {
         setGait(CONTINUOUS, RIPPLE);
@@ -16,9 +14,9 @@ namespace Mildred {
         /**
          * Compute Gait and IK on each leg
          */
-        for (const auto &leg:control->body->legs) {
-            KDL::Vector gaitStep = leg->doGait();
-            KDL::Vector positionInBody = control->body->frame * gaitStep;
+        for (const auto &leg:control_->body->legs) {
+            KDL::Vector gaitStep       = leg->doGait();
+            KDL::Vector positionInBody = control_->body->frame * gaitStep;
             ROS_DEBUG_STREAM("Leg " << leg->name << ":");
             ROS_DEBUG_STREAM(" - Gait: " << gaitStep.x() << ", " << gaitStep.y() << ", " << gaitStep.z());
             ROS_DEBUG_STREAM(" - Body: " << positionInBody.x() << ", " << positionInBody.y() << ", " << positionInBody.z());
@@ -41,7 +39,7 @@ namespace Mildred {
 
         // fmin to 1.0 because the PS3 remote doesn't go in a circle
         // but rather in a square with rounded corners at about x=0.9, y=0.9
-        targetSpeed = fmin(targetSpeed, 1.00);
+        targetSpeed     = fmin(targetSpeed, 1.00);
         targetDirection = atan2(velocity.y(), velocity.x());
 
         ROS_DEBUG("Speed: %f Direction: %f", targetSpeed, targetDirection);
@@ -78,7 +76,7 @@ namespace Mildred {
          * Assign the gait to each leg
          * NOTE Is this really needed, do the legs need to know the gait?
          */
-        for (const auto &leg:control->body->legs) {
+        for (const auto &leg:control_->body->legs) {
             leg->setGait(gait);
         }
     }

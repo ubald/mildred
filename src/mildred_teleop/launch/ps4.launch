@@ -1,4 +1,5 @@
 <launch>
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find mildred_teleop)/config/rosconsole.conf"/>
     <node name="joystick_driver" pkg="joy" type="joy_node" respawn="true" output="screen" />
     <node ns="mildred" name="mildred_teleop" pkg="mildred_teleop" type="mildred_teleop_ps" respawn="true" output="screen"/>
 </launch>

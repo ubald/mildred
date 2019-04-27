@@ -1,25 +1,22 @@
 #pragma once
 
-#include <mildred_control/fsm/State.h>
-#include <mildred_control/MildredControl.h>
+#include "mildred_control/mildred/states/ControlState.h"
 
 namespace Mildred {
-    class WalkingState: public State {
-        public:
-            WalkingState(MildredControl * control);
-            ~WalkingState() = default;
+    class WalkingState : public ControlState {
+      public:
+        WalkingState(MildredControl *control);
+        ~WalkingState() = default;
 
-            bool onEnter(const Event &event) override;
-            void tick(double now, double delta) override;
-            void handleControl(const mildred_core::MildredControlMessage::ConstPtr &controlMessage) override;
+        bool onEnter(const Event &event) override;
+        void tick(double now, double delta) override;
+        void handleControl(const mildred_core::MildredControlMessage::ConstPtr &controlMessage) override;
 
-        protected:
-            MildredControl *control{nullptr};
+      protected:
+        void setGait(Mildred::EGaitShape shape, Mildred::EGaitSequence sequence);
+        std::shared_ptr<Mildred::Gait> gait{nullptr};
 
-            void setGait(Mildred::EGaitShape shape, Mildred::EGaitSequence sequence);
-            std::shared_ptr<Mildred::Gait> gait{nullptr};
-
-            double targetSpeed;
-            double targetDirection;
+        double targetSpeed;
+        double targetDirection;
     };
 }

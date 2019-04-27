@@ -11,14 +11,14 @@
 #include <geometry_msgs/Point.h>
 #include <visualization_msgs/Marker.h>
 
-#include <mildred_control/fsm/Machine.h>
-#include <mildred_control/mildred/Body.h>
 #include <mildred_core/mildred.h>
 #include <mildred_core/MildredCommandMessage.h>
 #include <mildred_core/MildredControlMessage.h>
+#include <mildred_control/mildred/Body.h>
+#include <mildred_control/mildred/states/ControlMachine.h>
+
 
 namespace Mildred {
-
     class MildredControl {
       public:
         MildredControl();
@@ -44,7 +44,7 @@ namespace Mildred {
         ros::Publisher              targetJointPositionPublisher;
         std_msgs::Float64MultiArray targetJointPositionMessage;
 
-        Mildred::Machine machine;
+        ControlMachine machine;
 
         double lastTime = 0;
         bool   hasState = false;

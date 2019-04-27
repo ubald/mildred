@@ -7,6 +7,7 @@
 #include "mildred/states/IdleState.h"
 #include "mildred/states/StandingState.h"
 #include "mildred/states/SittingState.h"
+#include "mildred/states/StartingState.h"
 #include "mildred/states/WalkingState.h"
 
 namespace Mildred {
@@ -18,7 +19,6 @@ namespace Mildred {
         commandSubscriber            = nodeHandle.subscribe("command", 1, &MildredControl::commandMessageCallback, this);
         controlSubscriber            = nodeHandle.subscribe("control", 1, &MildredControl::controlMessageCallback, this);
         jointStatesSubscriber        = nodeHandle.subscribe("joint_states", 1, &MildredControl::jointsStatesCallback, this);
-
         targetJointPositionPublisher = nodeHandle.advertise<std_msgs::Float64MultiArray>("joint_position_controller/command", 1);
         actuatorsStatePublisher      = nodeHandle.advertise<mildred_core::ActuatorsStateMessage>("actuators_state", 1, true);
         mildredStatePublisher        = nodeHandle.advertise<mildred_core::MildredStateMessage>("mildred_state", 1, true);
@@ -27,26 +27,38 @@ namespace Mildred {
         targetMarkersPublisher = nodeHandle.advertise<visualization_msgs::Marker>("visualization_marker", 1);
         #endif
 
+        auto starting = std::make_shared<StartingState>(this);
         auto idle     = std::make_shared<IdleState>(this);
         auto sitting  = std::make_shared<SittingState>(this);
         auto standing = std::make_shared<StandingState>(this);
         auto walking  = std::make_shared<WalkingState>(this);
 
-        machine.addState(idle, true);
-        machine.addState(sitting);
-        machine.addState(standing);
-
-        machine.addTransition<Stand>(idle, standing);
-        machine.addTransition<Sit>(standing, sitting);
-
-        machine.addTransition<Ragdoll>(sitting, idle);
-        machine.addTransition<Ragdoll>(standing, idle);
-
-        machine.onStateChange = [this](std::shared_ptr<State> state) {
+        machine.onStateChange = [this](std::shared_ptr<ControlState> state) {
+            ROS_INFO_STREAM("Publishing state changed to " << state->name());
             mildred_core::MildredStateMessage message;
             message.state = static_cast<decltype(message.state)>(state->id());
             mildredStatePublisher.publish(message);
         };
+
+        machine.addState(starting, true);
+        machine.addState(idle);
+        machine.addState(sitting);
+        machine.addState(standing);
+        machine.addState(walking);
+
+        machine.addTransition<Enable>(starting, idle);
+
+        machine.addTransition<Sit>(idle, sitting);
+
+        machine.addTransition<Stand>(sitting, standing);
+        machine.addTransition<Ragdoll>(sitting, idle);
+
+        machine.addTransition<Sit>(standing, sitting);
+        machine.addTransition<Walk>(standing, walking);
+        machine.addTransition<Ragdoll>(standing, idle);
+
+        machine.addTransition<Stand>(walking, standing);
+        machine.addTransition<Ragdoll>(walking, idle);
     }
 
     bool MildredControl::init() {
@@ -157,10 +169,9 @@ namespace Mildred {
         body->setJointState(jointStatesMessage);
 
         if (!hasState) {
-            mildred_core::MildredStateMessage message;
-            message.state = static_cast<decltype(message.state)>(machine.state()->id());
-            mildredStatePublisher.publish(message);
+            ROS_INFO("Got first joint state message, switching to idle");
             hasState = true;
+            machine.handleEvent(Enable());
         }
     }
 

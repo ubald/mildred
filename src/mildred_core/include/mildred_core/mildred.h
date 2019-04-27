@@ -12,6 +12,7 @@ enum MildredCommand {
 
 enum class MildredState {
     Unknown = 0,
+    Starting,
     Idle,
     Sitting,
     Standing,

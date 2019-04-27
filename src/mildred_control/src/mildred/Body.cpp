@@ -15,7 +15,7 @@ namespace Mildred {
             std::string tipName = legTipPrefix + "_" + std::to_string(i);
 
             auto chain = std::make_unique<KDL::Chain>();
-            ROS_INFO("Getting chain from \"base_link\" to \"%s\"", tipName.c_str());
+            ROS_DEBUG("Getting chain from \"base_link\" to \"%s\"", tipName.c_str());
             if (!tree->getChain("base_link", tipName, *chain)) {
                 ROS_ERROR("Failed get chain from \"base_link\" to \"%s\"", tipName.c_str());
                 return false;
