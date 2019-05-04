@@ -7,6 +7,7 @@
 #include <sensor_msgs/JointState.h>
 #include <kdl_parser/kdl_parser.hpp>
 #include <kdl/tree.hpp>
+#include <tf2/LinearMath/Transform.h>
 
 #include "mildred_control/gait/gaits.h"
 
@@ -26,7 +27,7 @@ namespace Mildred {
 
             std::vector<std::shared_ptr<Mildred::Leg>> legs;
 
-            KDL::Frame frame;
+            tf2::Transform frame;
 
         protected:
     };

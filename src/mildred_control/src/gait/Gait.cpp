@@ -63,7 +63,7 @@ namespace Mildred {
         }
     }
 
-    KDL::Vector Gait::walk(GaitConfig &legGait) {
+    tf2::Vector3 Gait::walk(GaitConfig &legGait) {
         cyclePosition = (cycleTime / cycleDuration) + timing[legGait.index];
         if (cyclePosition > 1.00) {
             cyclePosition = cyclePosition - 1;

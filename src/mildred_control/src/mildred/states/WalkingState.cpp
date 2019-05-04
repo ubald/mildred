@@ -1,5 +1,7 @@
 #include "WalkingState.h"
 
+#include <tf/LinearMath/Vector3.h>
+
 namespace Mildred {
     WalkingState::WalkingState(MildredControl *control) : ControlState(MildredState::Walking, "walking", control) {}
 
@@ -15,8 +17,8 @@ namespace Mildred {
          * Compute Gait and IK on each leg
          */
         for (const auto &leg:control_->body->legs) {
-            KDL::Vector gaitStep       = leg->doGait();
-            KDL::Vector positionInBody = control_->body->frame * gaitStep;
+            tf2::Vector3 gaitStep       = leg->doGait();
+            tf2::Vector3 positionInBody = control_->body->frame * gaitStep;
             ROS_DEBUG_STREAM("Leg " << leg->name << ":");
             ROS_DEBUG_STREAM(" - Gait: " << gaitStep.x() << ", " << gaitStep.y() << ", " << gaitStep.z());
             ROS_DEBUG_STREAM(" - Body: " << positionInBody.x() << ", " << positionInBody.y() << ", " << positionInBody.z());
@@ -25,7 +27,7 @@ namespace Mildred {
     }
 
     void WalkingState::handleControl(const mildred_core::MildredControlMessage::ConstPtr &controlMessage) {
-        auto velocity = KDL::Vector2(controlMessage->velocity.x, controlMessage->velocity.y);
+        auto velocity = tf2::Vector3(controlMessage->velocity.x, controlMessage->velocity.y, 0.00f);
 
         // A check is first made to see if an axis' value is 0.00 because the Norm()
         // method doesn't check that and returns NaN.
@@ -34,7 +36,7 @@ namespace Mildred {
         } else if (velocity.y() == 0.00) {
             targetSpeed = fabs(velocity.x());
         } else {
-            targetSpeed = fabs(velocity.Norm());
+            targetSpeed = fabs(velocity.length());
         }
 
         // fmin to 1.0 because the PS3 remote doesn't go in a circle

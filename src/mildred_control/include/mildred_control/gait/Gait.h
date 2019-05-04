@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ros/ros.h>
-#include <kdl/frames.hpp>
+#include <tf2/LinearMath/Vector3.h>
 
 namespace Mildred {
     enum GaitSequence {
@@ -19,7 +19,7 @@ namespace Mildred {
     public:
         virtual void setup() = 0;
         virtual void prepare(double speed, double direction);
-        virtual KDL::Vector walk(GaitConfig &legGait);
+        virtual tf2::Vector3 walk(GaitConfig &legGait);
 
         double getSpeed() const { return speed; }
         double getDirection() const { return direction; }
@@ -27,7 +27,7 @@ namespace Mildred {
     protected:
         explicit Gait(GaitSequence sequence);
         //virtual ~Gait();
-        virtual KDL::Vector calculate(GaitConfig &legGait) = 0;
+        virtual tf2::Vector3 calculate(GaitConfig &legGait) = 0;
 
         static constexpr const double cycleDuration = 1.00; // Duration of a cycle, PI could be used also
 

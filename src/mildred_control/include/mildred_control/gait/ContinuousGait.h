@@ -12,7 +12,7 @@ namespace Mildred {
         void setup() override;
 
     protected:
-        KDL::Vector calculate(GaitConfig &legGait) override;
+        tf2::Vector3 calculate(GaitConfig &legGait) override;
         double posx;
         double posy;
         double posz;

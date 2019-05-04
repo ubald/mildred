@@ -16,7 +16,7 @@ namespace Mildred {
             ROS_DEBUG("FK POS: %f %f %f", fk.second.x(), fk.second.y(), fk.second.z());
 
             leg->targetPosition = fk.second;
-            trajectories.emplace_back(leg->targetPosition, leg->frame * KDL::Vector(0.15f, 0.00f, 0.00f));
+            trajectories.emplace_back(leg->targetPosition, leg->frame * tf2::Vector3(0.15f, 0.00f, 0.00f));
         }
 
         moving = true;
@@ -51,9 +51,11 @@ namespace Mildred {
             double          t     = std::fmin((now - startTime) / 2.00f, 1.00f);
             uint8_t         index = 0;
             for (auto const &leg:control_->body->legs) {
-                leg->targetPosition.x(trajectories[index].first.x() + (trajectories[index].second.x() - trajectories[index].first.x()) * t);
-                leg->targetPosition.y(trajectories[index].first.y() + (trajectories[index].second.y() - trajectories[index].first.y()) * t);
-                leg->targetPosition.z(trajectories[index].first.z() + (trajectories[index].second.z() - trajectories[index].first.z()) * t);
+                leg->targetPosition.setValue(
+                    trajectories[index].first.x() + (trajectories[index].second.x() - trajectories[index].first.x()) * t,
+                    trajectories[index].first.y() + (trajectories[index].second.y() - trajectories[index].first.y()) * t,
+                    trajectories[index].first.z() + (trajectories[index].second.z() - trajectories[index].first.z()) * t
+                );
                 leg->doIK();
                 index++;
             }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kdl/frames.hpp>
+#include <tf2/LinearMath/Vector3.h>
 
 #include <mildred_control/mildred/states/ControlState.h>
 
@@ -21,6 +21,6 @@ namespace Mildred {
         double startTime = 0.00f;
         bool   moving    = true;
 
-        std::vector<std::pair<KDL::Vector, KDL::Vector>> trajectories;
+        std::vector<std::pair<tf2::Vector3, tf2::Vector3>> trajectories;
     };
 }

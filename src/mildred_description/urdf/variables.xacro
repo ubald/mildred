@@ -31,7 +31,7 @@
     <!--<xacro:property name="foot_mass" value="1.0"/>-->
 
     <!-- http://emanual.robotis.com/docs/en/dxl/x/xl430-w250/#specifications -->
-    <xacro:property name="max_torque" value="1.4"/> <!-- this is stall torque, graph shows 0.84 -->
+    <xacro:property name="max_torque" value="1.4"/> <!-- this is stall torque, graph shows 0.84, stall torque is 1.4 -->
     <xacro:property name="max_velocity" value="${((2 * pi) / 60) * 57}"/> <!-- rpm to rad/s -->
     <!--<xacro:property name="max_torque" value="10000"/> &lt;!&ndash; fuck it, just move &ndash;&gt;-->
     <!--<xacro:property name="max_velocity" value="100"/> &lt;!&ndash; fuck it, just move &ndash;&gt;-->

@@ -4,17 +4,17 @@ namespace Mildred {
     ContinuousGait::ContinuousGait(GaitSequence sequence) :
         Gait::Gait(sequence) {
         cycleTimeMultiplier = 2.500;
-        stepLength          = 0.100;
-        stepHeight          = 0.100;
+        stepLength          = 0.150;
+        stepHeight          = 0.050;
         bodyHeight          = 0.100;
-        radius              = 0.150;
+        radius              = 0.200;
     }
 
     void ContinuousGait::setup() {
         Gait::setup();
     }
 
-    KDL::Vector ContinuousGait::calculate(GaitConfig &legGait) {
+    tf2::Vector3 ContinuousGait::calculate(GaitConfig &legGait) {
         double stanceDuration = 1 - flightTime;
 
         if (cyclePosition <= stanceDuration) {
@@ -35,7 +35,7 @@ namespace Mildred {
         posy = posx * cos(direction + legGait.alpha - M_PI_2);
         posx = posx * sin(direction + legGait.alpha - M_PI_2) + radius;
 
-        return KDL::Vector(posx, posy, posz);
+        return tf2::Vector3(posx, posy, posz);
     }
 
 }

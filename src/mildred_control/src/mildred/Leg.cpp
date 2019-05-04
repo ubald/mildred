@@ -1,6 +1,6 @@
 #include <utility>
 
-#include "mildred_control/mildred/Leg.h"
+#include <mildred_control/mildred/Leg.h>
 
 namespace Mildred {
     Leg::Leg(unsigned int index) :
@@ -18,11 +18,18 @@ namespace Mildred {
 
         // Compose root frame and leg/hip frame
         // This is highly dependent on our specific URDF model design
-        frame = chain->segments[0].getFrameToTip() * chain->segments[1].getFrameToTip();
+        auto kdlFrame = chain->segments[0].getFrameToTip() * chain->segments[1].getFrameToTip();
 
         // Gait configuration
         double r, p, y;
-        frame.M.GetRPY(r, p, y);
+        kdlFrame.M.GetRPY(r, p, y);
+
+        frame.getOrigin().setValue(kdlFrame.p.x(), kdlFrame.p.y(), kdlFrame.p.z());
+        frame.getBasis().setRPY(r, p, y);
+        //ROS_INFO_STREAM("KDL:" << kdlFrame.p.x() << ", " << kdlFrame.p.y() << ", " << kdlFrame.p.z() << " - " << r << ", " << p << ", " << y);
+        //ROS_INFO_STREAM("TF2:" << frame.getOrigin().x() << ", " << frame.getOrigin().y() << ", " << frame.getOrigin().z() << " - " << frame.getRotation().x() << ", " << frame.getRotation().y() << ", " << frame.getRotation().z());
+        //return false;
+
         ROS_DEBUG("  Alpha: %f", y);
         gaitConfig.alpha = y;
 
@@ -112,13 +119,13 @@ namespace Mildred {
         currentGait = std::move(gait);
     }
 
-    KDL::Vector Leg::doGait() {
-        KDL::Vector gaitTargetPosition = currentGait->walk(gaitConfig);
-        KDL::Vector positionInLegFrame = frame * gaitTargetPosition;
+    tf2::Vector3 Leg::doGait() {
+        tf2::Vector3 gaitTargetPosition = currentGait->walk(gaitConfig);
+        tf2::Vector3 positionInLegFrame = frame * gaitTargetPosition;
         return positionInLegFrame;
     }
 
-    std::pair<bool, KDL::Vector> Leg::doFK() {
+    std::pair<bool, tf2::Vector3> Leg::doFK() {
         KDL::JntArray     q_in(jointCount);
         for (unsigned int i = 0; i < jointCount; ++i) {
             q_in(i) = joints[i].currentPosition;
@@ -128,20 +135,20 @@ namespace Mildred {
         int        fk_valid = fk_solver->JntToCart(q_in, p_out);
         if (fk_valid >= 0) {
             ROS_DEBUG("P_OUT: %f %f %f", p_out.p.x(), p_out.p.y(), p_out.p.z());
-            return std::make_pair(true, p_out.p);
+            return std::make_pair(true, tf2::Vector3(p_out.p.x(), p_out.p.y(), p_out.p.z()));
         } else {
             ROS_WARN("FK Solution not found for : %s, error: %d", name.c_str(), fk_valid);
             ROS_DEBUG("FK POS: %f %f %f", q_in(0), q_in(1), q_in(2));
             ROS_DEBUG("P_OUT: %f %f %f", p_out.p.x(), p_out.p.y(), p_out.p.z());
-            return std::make_pair(false, p_out.p);
+            return std::make_pair(false, tf2::Vector3(p_out.p.x(), p_out.p.y(), p_out.p.z()));
         }
     }
 
     bool Leg::doIK() {
         //if (initRun) {
-            q_init(0) = 0.00;
-            q_init(1) = -M_PI_2;
-            q_init(2) = 3 * M_PI_4;
+        q_init(0) = 0.00;
+        q_init(1) = -M_PI_2;
+        q_init(2) = 3 * M_PI_4;
         //} else {
         //    //Get the current joint positions (our array is base->tip, IK works with tip->base)
         //    std::string       debug;
@@ -152,7 +159,7 @@ namespace Mildred {
         //    ROS_DEBUG_STREAM(" -  CJP: " << debug);
         //}
 
-        int ik_valid = ik_solver_pos->CartToJnt(q_init, KDL::Frame(targetPosition), q_out);
+        int ik_valid = ik_solver_pos->CartToJnt(q_init, KDL::Frame(KDL::Vector(targetPosition.x(), targetPosition.y(), targetPosition.z())), q_out);
 
         // Only when a solution is found it will be sent
         if (ik_valid >= 0) {
@@ -172,7 +179,7 @@ namespace Mildred {
         return (ik_valid >= 0);
     }
 
-    bool Leg::doIK(KDL::Vector target) {
+    bool Leg::doIK(tf2::Vector3 target) {
         targetPosition = target;
         return doIK();
     }
