@@ -113,6 +113,14 @@ namespace Mildred {
         for (auto &joint:joints) {
             joint.setJointState(jointState);
         }
+
+        auto fk = doFK();
+        if (!fk.first) {
+            ROS_ERROR_STREAM("Failed to compute FK for leg " << name << " to update current position.");
+            return;
+        }
+
+        currentPosition = fk.second;
     }
 
     void Leg::setGait(std::shared_ptr<Mildred::Gait> gait) {
@@ -134,7 +142,7 @@ namespace Mildred {
         KDL::Frame p_out;
         int        fk_valid = fk_solver->JntToCart(q_in, p_out);
         if (fk_valid >= 0) {
-            ROS_DEBUG("P_OUT: %f %f %f", p_out.p.x(), p_out.p.y(), p_out.p.z());
+            //ROS_DEBUG("P_OUT: %f %f %f", p_out.p.x(), p_out.p.y(), p_out.p.z());
             return std::make_pair(true, tf2::Vector3(p_out.p.x(), p_out.p.y(), p_out.p.z()));
         } else {
             ROS_WARN("FK Solution not found for : %s, error: %d", name.c_str(), fk_valid);

@@ -7,22 +7,65 @@ namespace Mildred {
 
     bool WalkingState::onEnter(const Event &event) {
         setGait(CONTINUOUS, TRIPOD);
+        gait->prepare(0.00f, 0.00f);
+        //gait->prepare(0.00f, 0.00f);
+
+
+        for (const auto &leg:control_->body->legs) {
+            leg->targetPosition = leg->currentPosition;
+            targetPositions.emplace_back(leg->doGait());
+        }
+
+        preparing = true;
+
+        return true;
+    }
+
+    bool WalkingState::onExit(const Event &event) {
+        gait = nullptr;
+        targetPositions.clear();
         return true;
     }
 
     void WalkingState::tick(double now, double delta) {
-        gait->prepare(targetSpeed, targetDirection);
+        if (preparing) {
+            double speed    = 1.00f;
+            double distance = delta * speed;
 
-        /**
-         * Compute Gait and IK on each leg
-         */
-        for (const auto &leg:control_->body->legs) {
-            tf2::Vector3 gaitStep       = leg->doGait();
-            tf2::Vector3 positionInBody = control_->body->frame * gaitStep;
-            ROS_DEBUG_STREAM("Leg " << leg->name << ":");
-            ROS_DEBUG_STREAM(" - Gait: " << gaitStep.x() << ", " << gaitStep.y() << ", " << gaitStep.z());
-            ROS_DEBUG_STREAM(" - Body: " << positionInBody.x() << ", " << positionInBody.y() << ", " << positionInBody.z());
-            leg->doIK(positionInBody);
+            bool            finished = true;
+            uint8_t         index    = 0;
+            for (auto const &leg:control_->body->legs) {
+                tf2::Vector3 move      = targetPositions[index] - leg->currentPosition;
+                double       magnitude = fabs(move.length());
+                if (magnitude > distance) {
+                    finished = false;
+                    move *= distance / magnitude;
+                } else {
+                    ROS_WARN_STREAM("" << magnitude);
+                }
+                leg->targetPosition = leg->currentPosition + move;
+                leg->doIK();
+                index++;
+            }
+
+            if (finished) {
+                preparing = false;
+                targetPositions.clear();
+            }
+        } else {
+            gait->prepare(targetSpeed, targetDirection);
+
+            /**
+             * Compute Gait and IK on each leg
+             */
+            for (const auto &leg:control_->body->legs) {
+                tf2::Vector3 gaitStep       = leg->doGait();
+                tf2::Vector3 positionInBody = control_->body->frame * gaitStep;
+                ROS_DEBUG_STREAM("Leg " << leg->name << ":");
+                ROS_DEBUG_STREAM(" - Gait: " << gaitStep.x() << ", " << gaitStep.y() << ", " << gaitStep.z());
+                ROS_DEBUG_STREAM(" - Body: " << positionInBody.x() << ", " << positionInBody.y() << ", " << positionInBody.z());
+                leg->doIK(positionInBody);
+            }
         }
     }
 

@@ -76,8 +76,9 @@ namespace Mildred {
          */
         void setGait(std::shared_ptr<Mildred::Gait> gait);
 
-        tf2::Transform frame;
+        tf2::Transform frame{tf2::Transform::getIdentity()};
         tf2::Vector3   targetPosition;
+        tf2::Vector3   currentPosition;
         Mildred::Joint joints[DOF];
 
         tf2::Vector3 doGait();

@@ -10,6 +10,8 @@ namespace Mildred {
             return false;
         }
 
+        frame.setIdentity();
+
         //Assign chains to legs
         for (unsigned int i = 0; i < legCount; ++i) {
             std::string tipName = legTipPrefix + "_" + std::to_string(i);

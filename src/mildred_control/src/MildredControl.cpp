@@ -51,6 +51,7 @@ namespace Mildred {
         machine.addTransition<Sit>(idle, sitting);
 
         machine.addTransition<Stand>(sitting, standing);
+        machine.addTransition<Standby>(sitting, idle);
         machine.addTransition<Ragdoll>(sitting, idle);
 
         machine.addTransition<Sit>(standing, sitting);
@@ -143,6 +144,9 @@ namespace Mildred {
         switch (command) {
             case MildredCommand::Ragdoll:
                 machine.handleEvent(Ragdoll());
+                break;
+            case MildredCommand::Standby:
+                machine.handleEvent(Standby());
                 break;
             case MildredCommand::Sit:
                 machine.handleEvent(Sit());

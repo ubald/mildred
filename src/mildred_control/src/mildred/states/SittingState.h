@@ -18,9 +18,7 @@ namespace Mildred {
         void tick(double now, double delta) override;
 
       protected:
-        double startTime = 0.00f;
-        bool   moving    = true;
-
-        std::vector<std::pair<tf2::Vector3, tf2::Vector3>> trajectories;
+        bool moving = true;
+        std::vector<tf2::Vector3> targetPositions;
     };
 }

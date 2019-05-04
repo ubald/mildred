@@ -27,7 +27,7 @@ namespace Mildred {
 
             std::vector<std::shared_ptr<Mildred::Leg>> legs;
 
-            tf2::Transform frame;
+            tf2::Transform frame{tf2::Transform::getIdentity()};
 
         protected:
     };

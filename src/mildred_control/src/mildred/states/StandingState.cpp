@@ -7,16 +7,8 @@ namespace Mildred {
 
     bool StandingState::onEnter(const Event &event) {
         for (const auto &leg:control_->body->legs) {
-            auto fk = leg->doFK();
-            if (!fk.first) {
-                ROS_ERROR_STREAM("Failed to compute FK for leg " << leg->name << " while standing.");
-                return false;
-            }
-
-            ROS_INFO("FK POS: %f %f %f", fk.second.x(), fk.second.y(), fk.second.z());
-
-            leg->targetPosition = fk.second;
-            trajectories.emplace_back(leg->targetPosition, leg->frame * tf2::Vector3(0.15f, 0.00f, 0.00f));
+            leg->targetPosition = leg->currentPosition;
+            targetPositions.emplace_back(leg->frame * tf2::Vector3(0.15f, 0.00f, -0.14f));
         }
 
         moving = true;
@@ -26,7 +18,7 @@ namespace Mildred {
 
     bool StandingState::onExit(const Ragdoll &event) {
         // Ragdoll is a safety event, we don't cancel transition when received
-        trajectories.clear();
+        targetPositions.clear();
         return true;
     }
 
@@ -35,52 +27,32 @@ namespace Mildred {
             return false;
         }
 
-        trajectories.clear();
+        targetPositions.clear();
         return true;
     }
 
     void StandingState::tick(double now, double delta) {
-        if (startTime == 0.00f) {
-            startTime = now;
-        }
-
-        // TODO: Rewrite, this is testing bullshit
-
         if (moving) {
-            // Step 1 - Regroup Limbs
-            // TODO: If all within eps, skip the timer and go to standing
-            double          t     = std::fmin((now - startTime) / 2.00f, 1.00f);
-            uint8_t         index = 0;
+            double speed    = 1.00f;
+            double distance = delta * speed;
+
+            bool            finished = true;
+            uint8_t         index    = 0;
             for (auto const &leg:control_->body->legs) {
-                leg->targetPosition.setValue(
-                    trajectories[index].first.x() + (trajectories[index].second.x() - trajectories[index].first.x()) * t,
-                    trajectories[index].first.y() + (trajectories[index].second.y() - trajectories[index].first.y()) * t,
-                    trajectories[index].first.z() + (trajectories[index].second.z() - trajectories[index].first.z()) * t
-                    );
+                tf2::Vector3 move      = targetPositions[index] - leg->currentPosition;
+                double       magnitude = fabs(move.length());
+                if (magnitude > distance) {
+                    finished = false;
+                    move *= distance / magnitude;
+                }
+                leg->targetPosition = leg->currentPosition + move;
                 leg->doIK();
                 index++;
             }
 
-            if (t == 1.00f) {
-                startTime  = now;
+            if (finished) {
                 moving = false;
-                trajectories.clear();
-                for (const auto &leg:control_->body->legs) {
-                    trajectories.emplace_back(leg->targetPosition, leg->frame * tf2::Vector3(0.15f, 0.00f, -0.14f));
-                }
-            }
-        } else {
-            // Step 2 - Stand
-            double          t     = std::fmin((now - startTime) / 0.50f, 1.00f);
-            uint8_t         index = 0;
-            for (auto const &leg:control_->body->legs) {
-                leg->targetPosition.setValue(
-                    trajectories[index].first.x() + (trajectories[index].second.x() - trajectories[index].first.x()) * t,
-                    trajectories[index].first.y() + (trajectories[index].second.y() - trajectories[index].first.y()) * t,
-                    trajectories[index].first.z() + (trajectories[index].second.z() - trajectories[index].first.z()) * t
-                );
-                leg->doIK();
-                index++;
+                targetPositions.clear();
             }
         }
     }

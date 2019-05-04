@@ -31,7 +31,10 @@ namespace Mildred {
                 if (buttonPressed(PS4_BUTTON_ACTION_CROSS)) {
                     ROS_INFO("Sending stand command");
                     sendCommand(MildredCommand::Stand);
-                } else if (buttonPressed(PS4_BUTTON_ACTION_CIRCLE) || buttonPressed(PS4_BUTTON_ACTION_SQUARE)) {
+                } else if (buttonPressed(PS4_BUTTON_ACTION_CIRCLE)) {
+                    ROS_INFO("Sending standby command");
+                    sendCommand(MildredCommand::Standby);
+                } else if (buttonPressed(PS4_BUTTON_ACTION_SQUARE)) {
                     ROS_INFO("Sending ragdoll command");
                     sendCommand(MildredCommand::Ragdoll);
                 }

@@ -5,6 +5,7 @@
 
 enum MildredCommand {
     Ragdoll = 0,
+    Standby,
     Sit,
     Stand,
     Walk

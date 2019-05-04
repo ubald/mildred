@@ -11,6 +11,7 @@ namespace Mildred {
         ~WalkingState() = default;
 
         bool onEnter(const Event &event) override;
+        bool onExit(const Event &event) override;
         void tick(double now, double delta) override;
         void handleControl(const mildred_core::MildredControlMessage::ConstPtr &controlMessage) override;
 
@@ -20,5 +21,7 @@ namespace Mildred {
 
         double targetSpeed;
         double targetDirection;
+        bool preparing;
+        std::vector<tf2::Vector3> targetPositions;
     };
 }
