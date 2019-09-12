@@ -317,8 +317,10 @@ void DynamixelController::actuatorsStateCallback(const mildred_core::ActuatorsSt
     for (auto const &dxl:dxlIds) {
         if (actuatorsStateMessage->state > 0) {
             dynamixelWorkbench->torqueOn(dxl.second);
+            //dynamixelWorkbench->itemWrite(dxl.second, "Status_Return_Level", 1);
         } else {
             dynamixelWorkbench->torqueOff(dxl.second);
+            //dynamixelWorkbench->itemWrite(dxl.second, "Status_Return_Level", 2);
         }
     }
 }
@@ -379,6 +381,8 @@ int main(int argc, char **argv) {
 
     std::string port     = argv[1]; // "/dev/ttyUSB0"
     uint32_t    baudRate = atoi(argv[2]); // 57600
+
+    ROS_INFO_STREAM("Port: " << port << " Baud Rate: " << baudRate);
 
     DynamixelController dynamixelController{port, baudRate};
 

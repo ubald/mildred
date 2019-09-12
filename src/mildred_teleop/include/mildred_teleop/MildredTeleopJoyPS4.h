@@ -2,7 +2,6 @@
 
 #include <ros/ros.h>
 
-#include "mildred_core/RemoteControlMessage.h"
 #include "mildred_teleop/MildredTeleopJoy.h"
 
 // BUTTONS

@@ -1,0 +1,12 @@
+<launch>
+    <arg name="usb_port" default="/dev/ttyUSB0"/>
+    <arg name="dxl_baud_rate" default="4000000"/>
+
+    <include file="$(find mildred_dynamixel)/launch/dynamixel_controller.launch">
+        <arg name="usb_port" value="$(arg usb_port)" />
+        <arg name="dxl_baud_rate" value="$(arg dxl_baud_rate)" />
+    </include>
+
+    <node ns="mildred" name="mildred_dynamixel_tester" pkg="mildred_dynamixel" type="tester" required="true" output="screen">
+    </node>
+</launch>

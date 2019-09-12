@@ -29,15 +29,15 @@ Additional Boards Manager URL:
 ###### Using Fish
 You must have [bass](https://github.com/edc/bass) installed.
 
-    bass source install/setup.bash
+    bass source devel/setup.bash
     
 ###### Using Zsh
 
-    source install/setup.zsh
+    source devel/setup.zsh
     
 ###### Using Bash
 
-    source install/setup.bash
+    source devel/setup.bash
 
 ## Fix gazebo in vmware
 

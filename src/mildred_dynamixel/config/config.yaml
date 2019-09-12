@@ -5,10 +5,17 @@ common:
     Drive_Mode: 0
     Operating_Mode: 3
     Acceleration_Limit: 0
-    Velocity_Limit: 0
+    PWM_Limit: 885
+    Goal_PWM: 885
+    Velocity_Limit: 1023
     Profile_Velocity: 0
     Profile_Acceleration: 0
     Homing_Offset: 0
+    Position_P_Gain: 640 # default: 640/16383 (KPP = KPP(TBL) / 128)
+    Position_I_Gain: 0 # default: 0/16383 (KPI = KPI(TBL) / 65,536)
+    Position_D_Gain: 4000 # default: 4000/16383 (KPD = KPD(TBL) / 16)
+    Feedforward_1st_Gain: 0 # default: 0/16383
+    Feedforward_2nd_Gain: 0 # default: 0/16383
 
 #    Min_Position_Limit: 0
 #    Max_Position_Limit: 4095
@@ -28,7 +35,6 @@ joints:
     multiplier: 1.00
     offset: -0.684 # (2pi * 39.2) / 360
     dxl:
-      LED: 1
       Min_Position_Limit: 860 # Over
       Max_Position_Limit: 3980 # Under
   - name: tibia_joint_0

@@ -99,7 +99,7 @@ namespace Mildred {
         matrix_Mx(4, 4) = 0;
         matrix_Mx(5, 5) = 0;
         ik_solver_vel->setWeightTS(matrix_Mx);
-        ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR_JL>(*chain, jointMinimums, jointMaximums, *fk_solver, *ik_solver_vel, 1000, 0.001f);
+        ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR_JL>(*chain, jointMinimums, jointMaximums, *fk_solver, *ik_solver_vel, 10000, 0.0001f);
         //ik_solver_pos = std::make_unique<KDL::ChainIkSolverPos_NR>(*chain, *fk_solver, *ik_solver_vel, 1000, 0.01f);
 
         return true;
