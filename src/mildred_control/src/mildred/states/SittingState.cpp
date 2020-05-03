@@ -31,7 +31,7 @@ namespace Mildred {
 
     void SittingState::tick(double now, double delta) {
         if (moving) {
-            double speed    = 0.50f;
+            double speed    = 1.00f;
             double distance = delta * speed;
 
             bool            finished = true;
