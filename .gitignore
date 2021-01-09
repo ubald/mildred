@@ -53,3 +53,4 @@ CATKIN_IGNORE
 
 ref
 .idea/workspace.xml
+src/cmake-build-debug

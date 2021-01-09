@@ -7,6 +7,7 @@
     <excludeRoots>
       <file path="$PROJECT_DIR$/arduino/libraries" />
       <file path="$PROJECT_DIR$/build" />
+      <file path="$PROJECT_DIR$/devel" />
     </excludeRoots>
   </component>
   <component name="JavaScriptSettings">

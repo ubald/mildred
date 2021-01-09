@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mildred</name>
+  <version>0.0.0</version>
+  <description>The mildred package</description>
+  <maintainer email="ubald@ubaldesign.com">ubald</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>mildred_core</exec_depend>
+  <exec_depend>mildred_description</exec_depend>
+  <exec_depend>mildred_dynamixel</exec_depend>
+  <exec_depend>mildred_gazebo</exec_depend>
+  <exec_depend>mildred_teleop</exec_depend>
+
+  <export>
+
+  </export>
+</package>

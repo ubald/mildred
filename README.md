@@ -3,14 +3,9 @@ A ROS Based Hexapod
 
 # Getting Started
 
-### Install Extra Dependencies
+## Installation
 
-    sudo apt install sudo apt install \
-    ros-melodic-joy ros-melodic-joystick-drivers \  
-    ros-melodic-dynamixel-sdk ros-melodic-dynamixel-workbench \
-    ros-melodic-effort-controllers \
-    libyaml-cpp-dev \
-    liburdfdom-tools 
+`./setup.sh`
 
 ## OpenCM9.04 Arduino Setup
 Additional Boards Manager URL:
@@ -43,8 +38,10 @@ You must have [bass](https://github.com/edc/bass) installed.
 
     export SVGA_VGPU10=0
 
-
 # Other References
+
+## Dynamixel Wizard 2.0
+https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_wizard2
 
 ## Dynamixel Workbench
 http://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_workbench

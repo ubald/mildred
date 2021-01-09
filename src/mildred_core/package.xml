@@ -3,7 +3,7 @@
   <name>mildred_core</name>
   <version>0.0.0</version>
   <description>The mildred_core package</description>
-  <maintainer email="ubald@todo.todo">ubald</maintainer>
+  <maintainer email="ubald@ubaldesign.com">ubald</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>catkin</buildtool_depend>

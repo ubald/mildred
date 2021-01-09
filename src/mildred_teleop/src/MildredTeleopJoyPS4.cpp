@@ -13,11 +13,11 @@ namespace Mildred {
 
         switch (state) {
             case MildredState::Unknown:
-                ROS_WARN("State unknown, waiting for control");
+                ROS_WARN("Robot state unknown, waiting for robot control");
                 break;
 
             case MildredState::Starting:
-                ROS_WARN("State unknown, waiting for control");
+                ROS_WARN("Robot state starting, waiting for robot control");
                 break;
 
             case MildredState::Idle:

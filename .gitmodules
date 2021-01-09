@@ -1,0 +1,6 @@
+[submodule "src/dynamixel_workbench"]
+	path = src/dynamixel_workbench
+	url = https://github.com/ROBOTIS-GIT/dynamixel-workbench.git
+[submodule "src/dynamixel_workbench_msgs"]
+	path = src/dynamixel_workbench_msgs
+	url = https://github.com/ROBOTIS-GIT/dynamixel-workbench-msgs.git

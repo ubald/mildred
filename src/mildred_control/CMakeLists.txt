@@ -11,7 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     std_msgs
     urdf
-    orocos_kdl
     kdl_parser
     tf2
     mildred_core
@@ -112,7 +111,7 @@ catkin_package(
     INCLUDE_DIRS include
     #  LIBRARIES mildred_control
     CATKIN_DEPENDS roscpp std_msgs urdf kdl_parser tf2 mildred_core
-    DEPENDS EIGEN3 orocos_kdl
+    DEPENDS EIGEN3
 )
 
 ###########

@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
     if (!mildredControl->init()) {
         ROS_ERROR("Error during initialization");
         return 1;
-    };
+    }
 
     while (ros::ok()) {
         ros::spinOnce();
