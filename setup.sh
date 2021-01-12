@@ -10,9 +10,11 @@ sudo apt install ros-noetic-desktop-full
 #sudo apt install ros-noetic-ros-base
 
 sudo apt install \
-    ros-noetic-joy \
+    ros-noetic-joy ros-noetic-ps3joy \
     ros-noetic-dynamixel-sdk \
     ros-noetic-effort-controllers \
+    ros-noetic-control \
+    ros-noetic-controllers \
     python3-roslaunch \
     libyaml-cpp-dev \
     liburdfdom-tools
