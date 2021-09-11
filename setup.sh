@@ -10,14 +10,17 @@ sudo apt install ros-noetic-desktop-full
 #sudo apt install ros-noetic-ros-base
 
 sudo apt install \
+    ros-noetic-catkin python3-catkin-tools \
     ros-noetic-joy ros-noetic-ps3joy \
     ros-noetic-dynamixel-sdk \
     ros-noetic-effort-controllers \
-    ros-noetic-control \
-    ros-noetic-controllers \
     python3-roslaunch \
     libyaml-cpp-dev \
-    liburdfdom-tools
+    liburdfdom-tools \
+    python3-wstool
+
+#    ros-noetic-control \
+#    ros-noetic-controllers \
 
 source /opt/ros/noetic/setup.bash
 

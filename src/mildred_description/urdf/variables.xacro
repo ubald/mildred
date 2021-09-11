@@ -46,14 +46,14 @@
     <!--<xacro:property name="tibia_joint_lower_limit" value="-1.9"/>-->
     <!--<xacro:property name="tibia_joint_upper_limit" value="3.7"/>-->
 
-    <xacro:property name="coxa_joint_lower_limit" value="-${3.14}"/>
-    <xacro:property name="coxa_joint_upper_limit" value="${3.14}"/>
+    <xacro:property name="coxa_joint_lower_limit" value="-${pi}"/>
+    <xacro:property name="coxa_joint_upper_limit" value="${pi}"/>
 
-    <xacro:property name="femur_joint_lower_limit" value="-${3.14}"/>
-    <xacro:property name="femur_joint_upper_limit" value="${3.14}"/>
+    <xacro:property name="femur_joint_lower_limit" value="-${pi}"/>
+    <xacro:property name="femur_joint_upper_limit" value="${pi}"/>
 
-    <xacro:property name="tibia_joint_lower_limit" value="-${3.14}"/>
-    <xacro:property name="tibia_joint_upper_limit" value="${3.14}"/>
+    <xacro:property name="tibia_joint_lower_limit" value="-${pi}"/>
+    <xacro:property name="tibia_joint_upper_limit" value="${pi}"/>
 
     <xacro:property name="damping" value="0"/>
     <xacro:property name="friction" value="1"/>

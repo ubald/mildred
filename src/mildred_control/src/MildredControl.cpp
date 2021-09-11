@@ -99,7 +99,7 @@ namespace Mildred {
         marker.action          = visualization_msgs::Marker::ADD;
         marker.scale.x         = 0.03;
         marker.scale.y         = 0.03;
-        marker.scale.z         = 0.03;
+        //marker.scale.z         = 0.03;
         marker.color.a         = 1.0;
         marker.color.r         = 1.0;
         marker.color.g         = 0.5;
@@ -108,6 +108,7 @@ namespace Mildred {
 
         uint8_t count = 0;
 
+
         for (auto const &leg:body->legs) {
             for (auto const &joint:leg->joints) {
                 targetJointPositionMessage.data[count] = joint.targetPosition;
@@ -115,10 +116,15 @@ namespace Mildred {
             }
 
             #ifdef VIZ_DEBUG
+            tf2::Vector3 target = leg->frame * leg->targetPosition;
+            if (target.length() == std::numeric_limits<double>::infinity()) {
+                continue;
+            }
+
             geometry_msgs::Point point;
-            point.x = leg->targetPosition.x();
-            point.y = leg->targetPosition.y();
-            point.z = leg->targetPosition.z();
+            point.x = target.x();
+            point.y = target.y();
+            point.z = target.z();
             marker.points.push_back(point);
             #endif
         }

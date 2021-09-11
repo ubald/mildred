@@ -5,8 +5,6 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-#include <kdl_parser/kdl_parser.hpp>
-#include <kdl/tree.hpp>
 #include <tf2/LinearMath/Transform.h>
 
 #include "mildred_control/gait/gaits.h"

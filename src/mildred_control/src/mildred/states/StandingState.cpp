@@ -8,7 +8,7 @@ namespace Mildred {
     bool StandingState::onEnter(const Event &event) {
         for (const auto &leg:control_->body->legs) {
             leg->targetPosition = leg->currentPosition;
-            targetPositions.emplace_back(leg->frame * tf2::Vector3(0.15f, 0.00f, -0.14f));
+            targetPositions.emplace_back(/*leg->frame **/ tf2::Vector3(0.15f, 0.00f, -0.14f));
         }
 
         moving = true;
@@ -43,16 +43,15 @@ namespace Mildred {
                 tf2::Vector3 move      = targetPositions[index] - leg->currentPosition;
                 double       magnitude = fabs(move.length());
 
-                if (magnitude > distance) {
-                    finished = false;
-                    move *= distance / magnitude;
-                    if (index == 0) {
-                        ROS_WARN_STREAM(move.length() << " " << distance);
-                    }
-                }
+                //if (magnitude > distance) {
+                //    finished = false;
+                //    move *= distance / magnitude;
+                //    if (index == 0) {
+                //        ROS_WARN_STREAM(move.length() << " " << distance);
+                //    }
+                //}
 
-                leg->targetPosition = leg->currentPosition + move;
-                leg->doIK();
+                leg->doIK(leg->currentPosition + move);
 
                 index++;
             }

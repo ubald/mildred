@@ -21,10 +21,10 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-#include "mildred_control/ik/UChainIkSolverPosNRJL.h"
+#include "mildred_control/ik/ChainIkSolverPos_NR_JL.h"
 
 #include <limits>
-
+#include <ros/ros.h>
 namespace KDL {
     ChainIkSolverPos_NR_JL::ChainIkSolverPos_NR_JL(
         const Chain &_chain, const JntArray &_q_min, const JntArray &_q_max, ChainFkSolverPos &_fksolver, ChainIkSolverVel &_iksolver,
@@ -76,16 +76,21 @@ namespace KDL {
             if (fksolver.JntToCart(q_out, f) < 0) {
                 return (error = E_FKSOLVERPOS_FAILED);
             }
-            delta_twist = diff(f, p_in);
 
-            //if(Equal(delta_twist,Twist::Zero(),eps))
+            delta_twist = diff(f, p_in);
+            //if (Equal(delta_twist, Twist::Zero(), eps)) {
             if (Equal(delta_twist.vel, Vector::Zero(), eps)) {
                 break;
             }
 
+            ROS_INFO_STREAM("q_out(" << q_out.rows() << "," << q_out.columns() << ")" << q_out(0) << ", " << q_out(1) << ", "  << q_out(2) <<  "| delta_q(" << delta_q.rows() << "," << delta_q.columns() << ")" << delta_q(0) << ", " << delta_q(1) << ", "  << delta_q(2));
+            ROS_INFO_STREAM(delta_twist.vel.x() << "," << delta_twist.vel.y() << "," <<delta_twist.vel.z() << " || " << delta_twist.rot.x() << "," << delta_twist.rot.y() << "," <<delta_twist.rot.z());
+            delta_twist.vel = Vector::Zero();
+            delta_twist.rot = Vector::Zero();
             if (iksolver.CartToJnt(q_out, delta_twist, delta_q) < 0) {
                 return (error = E_IKSOLVERVEL_FAILED);
             }
+
             Add(q_out, delta_q, q_out);
 
             for (unsigned int j = 0; j < q_min.rows(); j++) {
@@ -93,7 +98,6 @@ namespace KDL {
                     q_out(j) = q_min(j);
                 }
             }
-
 
             for (unsigned int j = 0; j < q_max.rows(); j++) {
                 if (q_out(j) > q_max(j)) {
@@ -113,8 +117,10 @@ namespace KDL {
         if (q_min_in.rows() != nj || q_max_in.rows() != nj) {
             return (error = E_SIZE_MISMATCH);
         }
+
         q_min         = q_min_in;
         q_max         = q_max_in;
+
         return (error = E_NOERROR);
     }
 

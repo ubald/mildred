@@ -22,7 +22,7 @@
                 <mesh filename="package://mildred_description/stl/body.stl" scale="0.001 0.001 0.001"/>
             </geometry>
             <material name="yellow">
-                <color rgba="255 255 0 1"/>
+                <color rgba="1.0 1.0 0.0 1.0"/>
             </material>
         </visual>
         <collision>
@@ -43,7 +43,7 @@
     <xacro:macro name="leg" params="suffix angle x y mirror">
 
         <!-- Leg Anchor -->
-        <joint name="leg_joint_${suffix}" type="fixed">
+        <joint name="hip_joint_${suffix}" type="fixed">
             <parent link="thorax"/>
             <child link="leg_${suffix}"/>
             <origin xyz="${x} ${y} 0.00" rpy="0.00 0.00 ${angle}"/>
@@ -55,7 +55,7 @@
                     <mesh filename="package://mildred_description/stl/xl430.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
                 <material name="red">
-                    <color rgba="255 0 0 1"/>
+                    <color rgba="1.0 0.0 0.0 1.0"/>
                 </material>
             </visual>
             <collision>
@@ -74,8 +74,6 @@
         <joint name="coxa_joint_${suffix}" type="revolute">
             <parent link="leg_${suffix}"/>
             <child link="coxa_${suffix}"/>
-            <!--<origin xyz="${x} ${y} 0.00" rpy="0.00 0.00 ${angle}"/>-->
-            <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 0.00"/>
             <axis xyz="0.00 0.00 1.00"/>
             <limit lower="${coxa_joint_lower_limit}" upper="${coxa_joint_upper_limit}" effort="${max_torque}" velocity="${max_velocity}"/>
             <dynamics damping="${damping}" friction="${friction}" />
@@ -87,14 +85,12 @@
                     <mesh filename="package://mildred_description/stl/coxa.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
                 <material name="blue">
-                    <color rgba="0 0 255 1"/>
+                    <color rgba="0.0 0.0 1.0 1.0"/>
                 </material>
             </visual>
             <collision>
-                <!--<origin xyz="${coxa_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
                 <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 ${radians(-90)}"/>
                 <geometry>
-                    <!--<cylinder radius="0.02" length="${coxa_length}"/>-->
                     <mesh filename="package://mildred_description/stl/coxa.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
             </collision>
@@ -133,14 +129,12 @@
                     <mesh filename="package://mildred_description/stl/femur.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
                 <material name="blue">
-                    <color rgba="0 127 127 1"/>
+                    <color rgba="0.0 0.5 0.5 1.0"/>
                 </material>
             </visual>
             <collision>
-                <!--<origin xyz="${femur_length/2} 0.00 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
                 <origin xyz="0.00 0.00 0.00" rpy="0.00 0.00 ${radians(-90)}"/>
                 <geometry>
-                    <!--<cylinder radius="0.02" length="${femur_length}"/>-->
                     <mesh filename="package://mildred_description/stl/femur.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
             </collision>
@@ -179,14 +173,12 @@
                     <mesh filename="package://mildred_description/stl/tibia.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
                 <material name="blue">
-                    <color rgba="0 0 255 1"/>
+                    <color rgba="0.0 0.0 1.0 1.0"/>
                 </material>
             </visual>
             <collision>
-                <!--<origin xyz="${tibia_length/2} 0.000 0.00" rpy="0.00 ${radians(90)} 0.00"/>-->
                 <origin xyz="0.00 0.000 0.00" rpy="${radians(tibia_angle)} 0.00 ${radians(-90)}"/>
                 <geometry>
-                    <!--<cylinder radius="0.02" length="${tibia_length}"/>-->
                     <mesh filename="package://mildred_description/stl/tibia.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
             </collision>
@@ -222,7 +214,7 @@
                     <sphere radius="${foot_radius}"/>
                 </geometry>
                 <material name="red">
-                    <color rgba="255 0 0 1"/>
+                    <color rgba="1.0 0.0 0.0 1.0"/>
                 </material>
             </visual>
             <collision name="foot_collision">

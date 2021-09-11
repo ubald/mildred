@@ -36,15 +36,14 @@ namespace Mildred {
             uint8_t         index    = 0;
             for (auto const &leg:control_->body->legs) {
                 tf2::Vector3 move      = targetPositions[index] - leg->currentPosition;
-                double       magnitude = fabs(move.length());
-                if (magnitude > distance) {
-                    finished = false;
-                    move *= distance / magnitude;
-                } else {
-                    ROS_WARN_STREAM("" << magnitude);
-                }
-                leg->targetPosition = leg->currentPosition + move;
-                leg->doIK();
+                //double       magnitude = fabs(move.length());
+                //if (magnitude > distance) {
+                //    finished = false;
+                //    move *= distance / magnitude;
+                //} else {
+                //    ROS_WARN_STREAM("" << magnitude);
+                //}
+                leg->doIK(leg->currentPosition + move);
                 index++;
             }
 
@@ -61,9 +60,9 @@ namespace Mildred {
             for (const auto &leg:control_->body->legs) {
                 tf2::Vector3 gaitStep       = leg->doGait();
                 tf2::Vector3 positionInBody = control_->body->frame * gaitStep;
-                ROS_DEBUG_STREAM("Leg " << leg->name << ":");
-                ROS_DEBUG_STREAM(" - Gait: " << gaitStep.x() << ", " << gaitStep.y() << ", " << gaitStep.z());
-                ROS_DEBUG_STREAM(" - Body: " << positionInBody.x() << ", " << positionInBody.y() << ", " << positionInBody.z());
+                //ROS_DEBUG_STREAM("Leg " << leg->name << ":");
+                //ROS_DEBUG_STREAM(" - Gait: " << gaitStep.x() << ", " << gaitStep.y() << ", " << gaitStep.z());
+                //ROS_DEBUG_STREAM(" - Body: " << positionInBody.x() << ", " << positionInBody.y() << ", " << positionInBody.z());
                 leg->doIK(positionInBody);
             }
         }

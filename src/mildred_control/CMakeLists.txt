@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
     )
 
 find_package(Eigen3 REQUIRED)
+find_package(orocos_kdl REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -111,7 +112,7 @@ catkin_package(
     INCLUDE_DIRS include
     #  LIBRARIES mildred_control
     CATKIN_DEPENDS roscpp std_msgs urdf kdl_parser tf2 mildred_core
-    DEPENDS EIGEN3
+    DEPENDS EIGEN3 kdl
 )
 
 ###########
@@ -143,7 +144,7 @@ add_executable(${PROJECT_NAME}
     src/main.cpp
     src/gait/Gait.cpp
     src/gait/ContinuousGait.cpp
-    src/ik/UChainIkSolverPosNRJL.cpp
+    src/ik/ChainIkSolverPos_NR_JL.cpp
     src/MildredControl.cpp
     src/mildred/Body.cpp
     src/mildred/Joint.cpp
